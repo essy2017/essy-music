@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "webpack --config webpack.prod.config.js --progress",
+    "sass:watch": "sass scss/main.scss:style.css --watch",
     "webpack:watch": "webpack --config webpack.config.js --progress --watch"
   },
   "author": "Spencer Cherry",
