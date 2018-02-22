@@ -98,7 +98,7 @@ export default class Knob extends React.Component {
   */
   getRotationFromValue (value) {
     const d = this.props.domain;
-    return ROTATE_MIN + (value / (d[1] - d[0])) * (ROTATE_MAX - ROTATE_MIN);
+    return ROTATE_MIN + ((value - d[0]) / (d[1] - d[0])) * (ROTATE_MAX - ROTATE_MIN);
   }
 
  /**
@@ -109,7 +109,7 @@ export default class Knob extends React.Component {
   */
   getValueFromRotation (r) {
     const d = this.props.domain;
-    return (d[1] - d[0]) * ((r - ROTATE_MIN) / (ROTATE_MAX - ROTATE_MIN));
+    return d[0] + (d[1] - d[0]) * ((r - ROTATE_MIN) / (ROTATE_MAX - ROTATE_MIN));
   }
 
  /**
@@ -147,8 +147,6 @@ export default class Knob extends React.Component {
     const props  = this.props;
     const rotate = this.getRotationFromValue(props.value);
     const style  = {
-      left  : props.left,
-      top   : props.top,
       width : props.size
     };
     const styleTicks = {
@@ -168,9 +166,7 @@ export default class Knob extends React.Component {
           <div className="ticks" style={styleTicks}>
             {this.renderTicks(rotate)}
           </div>
-          <div className="knob" style={styleControl} onMouseDown={this.onMouseDown}>
-
-          </div>
+          <div className="knob" style={styleControl} onMouseDown={this.onMouseDown}></div>
         </div>
       </div>
     );
@@ -181,10 +177,8 @@ export default class Knob extends React.Component {
 Knob.propTypes = {
   domain      : PropTypes.array.isRequired,
   label       : PropTypes.string.isRequired,
-  left        : PropTypes.number.isRequired,
   onChange    : PropTypes.func.isRequired,
   onChangeTmp : PropTypes.func.isRequired,
   size        : PropTypes.number.isRequired,
-  top         : PropTypes.number.isRequired,
   value       : PropTypes.number.isRequired
 };

@@ -7,6 +7,16 @@ import Tone from 'tone';
 import Key from './Key';
 import KeySharp from './KeySharp';
 
+/**
+ * Gets notes for keyboard.
+ * @method getData
+ * @param octaveStart {Number} Octave starting point.
+ * @param octaveEnd {Number} Octave ending point.
+ * @return {Object[]} Each with properties:
+ *    index {Number}
+ *    note {String}
+ *    sharp {Boolean}
+ */
 function getData (octaveStart, octaveEnd) {
 
   const notes  = 'CDEFGAB'.split('');
@@ -47,6 +57,89 @@ function getData (octaveStart, octaveEnd) {
   return data;
 }
 
+
+
+class Moog extends Tone.Monophonic {
+
+  constructor (options) {
+
+    options = Tone.defaultArg(options, Moog.defaults);
+
+    super(options);
+
+    this.oscillator1 = new Tone.Oscillator(options.oscillator1);
+    this.oscillator2 = new Tone.Oscillator(options.oscillator2);
+    this.frequency1 = this.oscillator1.frequency;
+    this.frequency2 = this.oscillator2.frequency;
+    this.detune = this.oscillator2.detune;
+    this.envelope = new Tone.AmplitudeEnvelope(options.envelope);
+    this.oscillator1.chain(this.envelope, this.output);
+    this.oscillator2.chain(this.envelope, this.output);
+    this._readOnly(['oscillator1', 'oscillator2', 'frequency1', 'frequency2', 'detune', 'envelope']);
+  }
+
+  setNote (note, time) {
+    time = this.toSeconds(time);
+    if (this.portamento > 0) {
+      this.frequency1.setValueAtTime(this.frequency1.value, time);
+      this.frequency2.setValueAtTime(this.frequency2.value, time);
+      const portTime = this.toSeconds(this.portamento);
+      this.frequency1.exponentialRampToValueAtTime(note, time + portTime);
+      this.frequency2.exponentialRampToValueAtTime(note, time + portTime);
+    }
+    else {
+      this.frequency1.setValueAtTime(note, time);
+      this.frequency2.setValueAtTime(note, time);
+    }
+    return this;
+  }
+
+  _triggerEnvelopeAttack (time, velocity) {
+    this.envelope.triggerAttack(time, velocity);
+    this.oscillator1.start(time);
+    this.oscillator2.start(time);
+    return this;
+  }
+
+  _triggerEnvelopeRelease (time) {
+    time = this.toSeconds(time);
+    this.envelope.triggerRelease(time);
+    this.oscillator1.stop(time + this.envelope.release);
+    this.oscillator2.stop(time + this.envelope.release);
+    return this;
+  }
+
+  dispose () {
+    return this;
+  }
+
+}
+
+Moog.defaults = {
+  oscillator1: {
+    type: 'triangle'
+  },
+  oscillator2: {
+    detune: 10,
+    type: 'sawtooth'
+  },
+  envelope: {
+    attack: 0.005,
+    decay: 0.1,
+    sustain: 0.3,
+    release: 1
+  },
+  portamento: 0
+};
+
+
+/*******************************************************************************
+ *
+ * Creates a piano.
+ * @class Piano
+ * @extends React.Component
+ *
+ ******************************************************************************/
 export default class Piano extends React.Component {
 
  /**
@@ -57,12 +150,11 @@ export default class Piano extends React.Component {
   constructor (props) {
     super(props);
     this.state = {
-      //active: {}
       active: []
     };
-    this.data = getData(props.octaveMin, props.octaveMax);
-    this.synth = this.getSynth(props.reverb);
-    this.mouseDown = false;
+    this.data             = getData(props.octaveMin, props.octaveMax);
+    this.synth            = this.getSynth(props.attack, props.decay, props.sustain, props.reverb, props.detune, props.type);
+    this.mouseDown        = false;
     this.handleMouseUpDoc = this.handleMouseUpDoc.bind(this);
 
     /*const b = new Tone.FMSynth();
@@ -103,50 +195,75 @@ export default class Piano extends React.Component {
     }).toMaster();*/
   }
 
+ /**
+  * Lifecycle method to update synth as needed.
+  * @method componentWillReceiveProps
+  * @param nextProps {Object}
+  */
   componentWillReceiveProps (nextProps) {
-    if (this.props.reverb !== nextProps.reverb) {
-      this.synth = this.getSynth(nextProps.reverb);
+    if (
+      this.props.reverb  !== nextProps.reverb ||
+      this.props.attack  !== nextProps.attack ||
+      this.props.decay   !== nextProps.decay  ||
+      this.props.sustain !== nextProps.sustain ||
+      this.props.detune  !== nextProps.detune ||
+      this.props.type    !== nextProps.type
+    ) {
+      this.synth = this.getSynth(nextProps.attack, nextProps.decay, nextProps.sustain, nextProps.reverb, nextProps.detune, nextProps.type);
     }
   }
 
-  getSynth (reverb) {
+ /**
+  * Gets a new synth.
+  * @method getSynth
+  * @param attack {Number}
+  * @param decay {Number}
+  * @param sustain {Number}
+  * @param reverb {Number}
+  * @param type {String}
+  */
+  getSynth (attack, decay, sustain, reverb, detune, type) {
+
     if (this.synth) {
-      this.synth.releaseAll();
+      //this.synth.releaseAll();
       this.synth.dispose();
+      this.synth = null;
     }
-    const synth = new Tone.PolySynth(12, Tone.Synth);
+
+    //const synth = new Tone.PolySynth(12, Moog, {
+    const synth = new Moog({
+      oscillator1: {
+        type: type
+      },
+      oscillator2: {
+        detune: detune
+      },
+      envelope: {
+        attack  : attack,
+        decay   : decay,
+        sustain : sustain,
+        release : decay
+      }
+    });
     const rev = new Tone.JCReverb(reverb);
     return synth.chain(rev, Tone.Master);
+    /*const synth = new Tone.PolySynth(12, Tone.Synth, {
+      oscillator: {
+        type: type
+      },
+      envelope: {
+        attack  : attack,
+        decay   : decay,
+        sustain : sustain,
+        release : decay
+      }
+    });
+
+    const rev = new Tone.JCReverb(reverb);
+    return synth.chain(rev, Tone.Master);*/
   }
 
   getTone () {
-    //const eff = new Tone.Vibrato().toMaster();
-    //const eff = new Tone.Tremolo().toMaster();
-    //const eff = new Tone.JCReverb(0.8).toMaster();
-    //const eff = new Tone.Freeverb().toMaster();
-    //const eff = new Tone.Phaser().toMaster();
-    //const eff = new Tone.Distortion(0.8).toMaster();
-    //const eff = new Tone.BitCrusher().toMaster();
-    //return new Tone.Synth().connect(eff);
-
-    //return new Tone.Synth().toMaster();
-    //return new Tone.PluckSynth().toMaster();
-    //return new Tone.MembraneSynth().toMaster();
-    //return new Tone.PolySynth(3, Tone.Synth, {
-    /*return new Tone.Synth({
-      oscillator: {
-        type: 'fatsawtooth',
-        count: 3,
-        spread: 30
-      },
-      envelope: {
-        attack: 0.01,
-        decay: 0.1,
-        sustain: 0.1,
-        release: 0.5,
-        attackCurve: 'exponential'
-      }
-    }).toMaster();*/
     const b = new Tone.FMSynth();
     const bVol = new Tone.Volume(-4.25);
     const bDist = new Tone.Distortion(2.5);
@@ -181,7 +298,8 @@ export default class Piano extends React.Component {
   * @method endAllNotes
   */
   endAllNotes () {
-    this.synth.releaseAll();
+    //this.synth.releaseAll();
+    this.synth.triggerRelease();
     this.setState({
       active: []
     });
@@ -193,7 +311,7 @@ export default class Piano extends React.Component {
   * @param note {String}
   */
   endNote (note) {
-    this.synth.triggerRelease(note);
+    this.synth.triggerRelease(/*note*/);
     let active = this.state.active;
     active.splice(active.indexOf(note), 1);
     this.setState({
@@ -295,9 +413,14 @@ export default class Piano extends React.Component {
 }
 
 Piano.propTypes = {
-  height    : PropTypes.number.isRequired,
-  octaveMin : PropTypes.number.isRequired,
-  octaveMax : PropTypes.number.isRequired,
-  reverb    : PropTypes.number.isRequired,
-  width     : PropTypes.number.isRequired
+  attack     : PropTypes.number.isRequired,
+  decay      : PropTypes.number.isRequired,
+  detune     : PropTypes.number.isRequired,
+  height     : PropTypes.number.isRequired,
+  octaveMin  : PropTypes.number.isRequired,
+  octaveMax  : PropTypes.number.isRequired,
+  reverb     : PropTypes.number.isRequired,
+  sustain    : PropTypes.number.isRequired,
+  type       : PropTypes.string.isRequired,
+  width      : PropTypes.number.isRequired
 };
