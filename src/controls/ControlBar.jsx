@@ -3,81 +3,183 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import Knob from './Knob';
 import Pot from './Pot';
-import Selector from './Selector';
+import Switch from './Switch';
 
-const OSC_MAP = {
+const DB_MIN = -20;
+const DB_MAX = 20;
+
+/**
+ * Steps for attack and decay knobs.
+ * @property ATTACK_STEPS
+ * @type Number[]
+ */
+const ATTACK_STEPS = [0, 0.01, 0.2, 0.6, 1, 5, 10, 15];
+
+/**
+ * Map from control to actual values for oscillator ranges.
+ * @property RANGE_MAP
+ * @type Object
+ */
+const RANGE_MAP = {
+  'LO' : -1,
+  '32' : 1,
+  '16' : 2,
+  '8'  : 3,
+  '4'  : 4,
+  '2'  : 5
+};
+
+/**
+ * Map from control to actual values for oscillator types.
+ * @property TYPE_MAP
+ * @type Object
+ */
+const TYPE_MAP = {
   'saw' : 'sawtooth',
   'sin' : 'sine',
   'sqr' : 'square',
   'tri' : 'triangle'
 };
 
-function oscValue (value) {
-  for (let k in OSC_MAP) {
-    if (OSC_MAP[k] === value) {
-      return k;
+/**
+ * Gets key from value in map.
+ * @method mapValue
+ * @param map {Object} A map.
+ * @return {Function} That returns key for value.
+ */
+function mapValue (map) {
+  return function (value) {
+    for (let k in map) {
+      if (map[k] === value) {
+        return k;
+      }
     }
-  }
+  };
 }
 
+/**
+ * Gets range control value from actual value.
+ * @method rangeValue
+ * @param value {Number} Actual value.
+ * @return {Number} Control value.
+ */
+const rangeValue = mapValue(RANGE_MAP);
+
+/**
+ * Gets type control value from actual value.
+ * @method typeValue
+ * @param value {String} Actual value.
+ * @return {String} Control value.
+ */
+const typeValue = mapValue(TYPE_MAP);
+
+/**
+ * Converts DB [-20, 20] to volume [0, 10].
+ * @method dbToVol
+ * @param db {Number} Decibels.
+ * @return {Number} Volume.
+ */
+function dbToVol (db) {
+  return ((db - DB_MIN) / (DB_MAX - DB_MIN)) * 10;
+}
+
+/**
+ * Converts volume [0, 10] to DB [-20, 20].
+ * @method volToDb
+ * @param vol {Number} Volume.
+ * @return {Number} Decibels.
+ */
+function volToDb (vol) {
+  return DB_MIN + (DB_MAX - DB_MIN) * (vol / 10);
+}
+
+/**
+ * Converts attack / decay value to control value.
+ * @method attackToCtrlVal
+ * @param attack {Number} Attack or decay value.
+ * @return {Number} Control value.
+ */
+function attackToCtrlVal (attack) {
+
+  const N     = ATTACK_STEPS.length;
+  const RANGE = ATTACK_STEPS[N - 1] - ATTACK_STEPS[0];
+
+  let min;
+  let minIndex = N - 2;
+  let maxIndex = N - 1;
+
+  for (let i = 0; i < N - 1; i++) {
+    if (attack >= ATTACK_STEPS[i] && attack <= ATTACK_STEPS[i+1]) {
+      minIndex = i;
+      maxIndex = i + 1;
+      break;
+    }
+  }
+
+  min = RANGE * (minIndex / (N - 1));
+
+  return min + (RANGE / N) * ((attack - ATTACK_STEPS[minIndex]) / (ATTACK_STEPS[maxIndex] - ATTACK_STEPS[minIndex]));
+}
+
+/**
+ * Converts control value to attack / decay value.
+ * @method ctrlValToAttack
+ * @param val {Number} Control value.
+ * @return {Number} Attack or decay value.
+ */
+function ctrlValToAttack (val) {
+
+  const n     = ATTACK_STEPS.length;
+  const max   = ATTACK_STEPS[n - 1];
+  const range = max - ATTACK_STEPS[0];
+  const index = Math.floor((n - 1) * (val / max));
+
+  if (index === n) {
+    return val;
+  }
+
+  const minVal = ATTACK_STEPS[index];
+  const maxVal = ATTACK_STEPS[index + 1];
+  const minAttack = (range / (n - 1)) * index;
+  const maxAttack = (range / (n - 1)) * (index + 1);
+
+  return minVal + (maxVal - minVal) * ((val - minAttack) / (maxAttack - minAttack));
+
+
+}
+
+
+/*******************************************************************************
+ *
+ * The control panel.
+ * @class ControlBar
+ * @extends React.Component
+ *
+ ******************************************************************************/
 export default class ControlBar extends React.Component {
 
  /**
-  * Constructor.
-  * @method constructor
-  * @param props {Object}
-  */
-  constructor (props) {
-    super(props);
-    this.state = {
-      attackTmp  : props.attack,
-      decayTmp   : props.decay,
-      detuneTmp  : props.detune,
-      reverbTmp  : props.reverb,
-      sustainTmp : props.sustain
-    };
-  }
-
- /**
-  * Handler for changes in values.
+  * Handler for changes in properties.
   * @method handleChange
-  * @param type {String} Property type.
-  * @param value {Number} Property value.
+  * @param obj {String} Property object.
+  * @param prop {String} Property name.
+  * @param value {String|Number} New value.
   */
-  handleChange (type, value) {
-    this.props.onChange(type, value);
-  }
-
- /**
-  * Handler for change in temporary value.
-  * @method handleChangeTmp
-  * @param type {String} Property.
-  * @param value {Number} New value.
-  */
-  handleChangeTmp (type, value) {
-    this.setState({
-      [type + 'Tmp']: value
-    });
-  }
-
- /**
-  * Handler for change in oscillator type.
-  * @method handleChangeType
-  * @param osc {String} Oscillator name.
-  * @param value {String} New type.
-  */
-  handleChangeType (osc, value) {
-    this.props.onChangeType(osc, OSC_MAP[value]);
-  }
-
-  handleChangeOsc (osc, prop, value) {
-    if (prop === 'type') {
-      value = OSC_MAP[value];
+  handleChange (obj, prop, value) {
+    if (prop === 'type' && obj !== 'noise') {
+      value = TYPE_MAP[value];
     }
-    this.props.onChangeOsc(osc, prop, value);
-    //console.log(osc, prop, value);
+    else if (prop === 'range') {
+      value = RANGE_MAP[String(value)];
+    }
+    else if (prop === 'volume') {
+      value = volToDb(value);
+    }
+    else if (prop === 'attack' || prop === 'decay') {
+      value = ctrlValToAttack(value);
+    }
+    this.props.onChange(obj, prop, value);
   }
 
  /**
@@ -90,76 +192,253 @@ export default class ControlBar extends React.Component {
     const style = {
       height : props.height,
       width  : props.width
-    }
+    };
+    const knobSize     = 0.1 * props.height;
+    const labelsType   = Object.keys(TYPE_MAP);
+    const labelsRange  = Object.keys(RANGE_MAP).reverse();
 
     return (
       <div id="controls" style={style}>
-        <div id="ctrl-osc">
+
+        <div id="ctrl-osc" className="ctrl-panel">
           <div className="ctrl-row-label">Oscillator 1</div>
           <div className="ctrl-row">
             <Pot
               angle={270}
-              cumulative={false}
               domain={false}
               label="Range"
-              labels={['LO', 32, 16, 8, 4, 2]}
-              onChange={this.handleChange.bind(this, 'range')}
-              size={0.2 * props.height}
+              labels={labelsRange}
+              onChange={this.handleChange.bind(this, 'oscillator1', 'range')}
+              size={knobSize}
               snap={true}
               ticks={6}
-              value={16}
+              value={rangeValue(props.oscillator1.range)}
             />
             <div className="ctrl-row-label-sm">Frequency</div>
             <Pot
               angle={270}
-              cumulative={false}
+              className="wave"
               domain={false}
               label="Waveform"
-              labels={Object.keys(OSC_MAP)}
-              onChange={this.handleChangeOsc.bind(this, 'oscillator1', 'type')}
-              size={0.2 * props.height}
+              labels={labelsType}
+              onChange={this.handleChange.bind(this, 'oscillator1', 'type')}
+              size={knobSize}
               snap={true}
               ticks={4}
-              value={oscValue(props.oscillator1.type)}
+              value={typeValue(props.oscillator1.type)}
             />
           </div>
-          <div className="ctrl-row-label mt-2">Oscillator 2</div>
+          <div className="ctrl-row-label mt-25">Oscillator 2</div>
           <div className="ctrl-row">
             <Pot
               angle={270}
-              cumulative={false}
               domain={false}
-              labels={['LO', 32, 16, 8, 4, 2]}
-              onChange={this.handleChange.bind(this, 'range')}
-              size={0.2 * props.height}
+              labels={labelsRange}
+              onChange={this.handleChange.bind(this, 'oscillator2', 'range')}
+              size={knobSize}
               snap={true}
               ticks={6}
-              value={16}
+              value={rangeValue(props.oscillator2.range)}
             />
             <Pot
               angle={270}
-              cumulative={false}
-              domain={[-7, 7]}
+              domain={[-1000, 1000]}
               labels={[-7, -5, -3, -1, 1, 3, 5, 7]}
-              onChange={this.handleChangeOsc.bind(this, 'oscillator2', 'detune')}
-              size={0.2 * props.height}
+              onChange={this.handleChange.bind(this, 'oscillator2', 'detune')}
+              size={knobSize}
               snap={true}
               ticks={15}
-              value={0}
+              value={props.oscillator2.detune}
             />
             <Pot
               angle={270}
-              cumulative={false}
+              className="wave"
               domain={false}
-              labels={Object.keys(OSC_MAP)}
-              onChange={this.handleChangeOsc.bind(this, 'oscillator2', 'type')}
-              size={0.2 * props.height}
+              labels={labelsType}
+              onChange={this.handleChange.bind(this, 'oscillator2', 'type')}
+              size={knobSize}
               snap={true}
               ticks={4}
-              value={oscValue(props.oscillator2.type)}
+              value={typeValue(props.oscillator2.type)}
+            />
+          </div>
+          <div className="ctrl-row-label mt-25">Oscillator 3</div>
+          <div className="ctrl-row">
+            <Pot
+              angle={270}
+              domain={false}
+              labels={labelsRange}
+              onChange={this.handleChange.bind(this, 'oscillator3', 'range')}
+              size={knobSize}
+              snap={true}
+              ticks={6}
+              value={rangeValue(props.oscillator3.range)}
+            />
+            <Pot
+              angle={270}
+              domain={[-1000, 1000]}
+              labels={[-7, -5, -3, -1, 1, 3, 5, 7]}
+              onChange={this.handleChange.bind(this, 'oscillator3', 'detune')}
+              size={knobSize}
+              snap={true}
+              ticks={15}
+              value={props.oscillator3.detune}
+            />
+            <Pot
+              angle={270}
+              className="wave"
+              domain={false}
+              labels={labelsType}
+              onChange={this.handleChange.bind(this, 'oscillator3', 'type')}
+              size={knobSize}
+              snap={true}
+              ticks={4}
+              value={typeValue(props.oscillator3.type)}
+            />
+          </div>
+          <div className="ctrl-row-label-lg mt-25">Oscillators</div>
+        </div>
+
+        <div id="ctrl-mixer" className="ctrl-panel">
+          <div className="vol-1">
+            <Pot
+              angle={300}
+              domain={[0, 10]}
+              label="Volume"
+              labels={[0, 2, 4, 6, 8, 10]}
+              onChange={this.handleChange.bind(this, 'oscillator1', 'volume')}
+              size={knobSize}
+              ticks={11}
+              value={dbToVol(props.oscillator1.volume)}
+            />
+            <div className="switch-left switch-wrap">
+              <div className="switch-line"></div>
+              <Switch
+                className="blue"
+                height={20}
+                onChange={this.handleChange.bind(this, 'oscillator1', 'on')}
+                value={props.oscillator1.on}
+                width={40}
+              />
+            </div>
+          </div>
+          <div className="noise">
+            <div className="switch-wrap switch-right on">
+              <Switch
+                className="blue"
+                height={20}
+                onChange={this.handleChange.bind(this, 'noise', 'on')}
+                value={props.noise.on}
+                width={40}
+              />
+              <div className="switch-line"></div>
+            </div>
+            <Pot
+              angle={300}
+              domain={[0, 10]}
+              label="Noise Volume"
+              labels={[0, 2, 4, 6, 8, 10]}
+              onChange={this.handleChange.bind(this, 'noise', 'volume')}
+              size={knobSize}
+              ticks={11}
+              value={dbToVol(props.noise.volume)}
+            />
+            <div className="switch-wrap type">
+              <Switch
+                className="blue"
+                height={20}
+                labels={['pink', 'white']}
+                onChange={this.handleChange.bind(this, 'noise', 'type')}
+                value={props.noise.type}
+                values={['pink', 'white']}
+                vertical={true}
+                width={40}
+              />
+            </div>
+          </div>
+          <div className="vol-2">
+            <Pot
+              angle={300}
+              domain={[0, 10]}
+              labels={[0, 2, 4, 6, 8, 10]}
+              onChange={this.handleChange.bind(this, 'oscillator2', 'volume')}
+              size={knobSize}
+              ticks={11}
+              value={dbToVol(props.oscillator2.volume)}
+            />
+            <div className="switch-left switch-wrap">
+              <div className="switch-line"></div>
+              <Switch
+                className="blue"
+                height={20}
+                onChange={this.handleChange.bind(this, 'oscillator2', 'on')}
+                value={props.oscillator2.on}
+                width={40}
+              />
+            </div>
+          </div>
+
+          <div className="vol-3">
+            <Pot
+              angle={300}
+              domain={[0, 10]}
+              labels={[0, 2, 4, 6, 8, 10]}
+              onChange={this.handleChange.bind(this, 'oscillator3', 'volume')}
+              size={knobSize}
+              ticks={11}
+              value={dbToVol(props.oscillator3.volume)}
+            />
+            <div className="switch-left switch-wrap">
+              <div className="switch-line"></div>
+              <Switch
+                className="blue"
+                height={20}
+                onChange={this.handleChange.bind(this, 'oscillator3', 'on')}
+                value={props.oscillator3.on}
+                width={40}
+              />
+            </div>
+          </div>
+
+          <div className="ctrl-row-label-lg">Mixer</div>
+        </div>
+
+        <div id="ctrl-mod" className="ctrl-panel">
+          <div className="ctrl-row-label">Loudness Control</div>
+          <div className="ctrl-row">
+            <Pot
+              angle={270}
+              domain={[0, 15]}
+              label="Attack Time"
+              labels={['msec', 10, 200, 600, 1, 5, 10, 'sec']}
+              onChange={this.handleChange.bind(this, 'envelope', 'attack')}
+              size={knobSize}
+              ticks={15}
+              value={attackToCtrlVal(props.envelope.attack)}
+            />
+            <Pot
+              angle={270}
+              domain={[0, 15]}
+              label="Decay Time"
+              labels={['msec', 10, 200, 600, 1, 5, 10, 'sec']}
+              onChange={this.handleChange.bind(this, 'envelope', 'decay')}
+              size={knobSize}
+              ticks={15}
+              value={attackToCtrlVal(props.envelope.decay)}
+            />
+            <Pot
+              angle={270}
+              domain={[0, 1]}
+              label="Sustain"
+              labels={[0, 2, 4, 6, 8, 10]}
+              onChange={this.handleChange.bind(this, 'envelope', 'sustain')}
+              size={knobSize}
+              ticks={11}
+              value={props.envelope.sustain}
             />
           </div>
         </div>
+
       </div>
     );
   }
@@ -167,17 +446,10 @@ export default class ControlBar extends React.Component {
 }
 
 ControlBar.propTypes = {
-  //attack       : PropTypes.number.isRequired,
-  //decay        : PropTypes.number.isRequired,
-  //detune       : PropTypes.number.isRequired,
-  height       : PropTypes.number.isRequired,
-  onChange     : PropTypes.func.isRequired,
-  onChangeOsc  : PropTypes.func.isRequired,
-  //onChangeType : PropTypes.func.isRequired,
-  oscillator1  : PropTypes.object.isRequired,
-  oscillator2  : PropTypes.object.isRequired,
-  //reverb       : PropTypes.number.isRequired,
-  //sustain      : PropTypes.number.isRequired,
-  //type         : PropTypes.string.isRequired,
-  width        : PropTypes.number.isRequired
+  height      : PropTypes.number.isRequired,
+  noise       : PropTypes.object.isRequired,
+  onChange    : PropTypes.func.isRequired,
+  oscillator1 : PropTypes.object.isRequired,
+  oscillator2 : PropTypes.object.isRequired,
+  width       : PropTypes.number.isRequired
 };

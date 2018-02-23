@@ -221,7 +221,7 @@ export default class Pot extends React.Component {
   */
   handleMouseUp (e) {
     let value = this.getValueFromRotation(this.state.rotation);
-    if (this.props.snap) {
+    if (this.props.snap && typeof value !== 'string') {
       value = Math.round(value);
     }
     this.props.onChange(value);
@@ -286,7 +286,7 @@ export default class Pot extends React.Component {
               this.ticks.map( (d, i) =>
                 <div
                   key={i}
-                  className={'tick' + (cum ? (d.deg <= rotate ? ' active' : '') : (d.deg === rotate ? ' active' : '') : '')}
+                  className={'tick' + (cum && d.deg <= rotate ? ' active' : '')}
                   style={d.outerStyle}
                 >
                   <div className="tick-label" style={d.labelStyle}>{d.label}</div>
@@ -309,7 +309,7 @@ export default class Pot extends React.Component {
 Pot.defaultProps = {
   angle      : 300,
   className  : '',
-  cumulative : true,
+  cumulative : false,
   domain     : [0, 1],
   label      : '',
   labels     : [],
