@@ -31,9 +31,18 @@ body, html {
   .ctrl-panel:not(:last-child) {
     border-right: 1px solid #111; }
 
+#ctrl-cont {
+  padding: 10px 10px 0 10px; }
+  #ctrl-cont .lfo-rate {
+    position: relative;
+    top: 30px; }
+  #ctrl-cont .lfo-noise {
+    position: relative;
+    top: 60px; }
+
 #ctrl-osc {
   padding: 10px 10px 0 10px;
-  width: 28%; }
+  width: 25%; }
 
 #ctrl-mixer {
   padding: 22px 20px 0 20px;
@@ -56,6 +65,9 @@ body, html {
       margin-bottom: 0.2rem; }
   #ctrl-mod .filter-2 {
     margin-top: 40px; }
+  #ctrl-mod .ctrl-row-label-lg {
+    position: relative;
+    top: 40px; }
 
 .mt-15 {
   margin-top: 1.5rem; }
@@ -168,9 +180,27 @@ body, html {
   .switch .label {
     color: #777;
     font-size: 0.5rem;
-    margin: 0.2rem 0 0 0.5rem;
-    text-align: right;
     text-transform: uppercase; }
+    .switch .label.label-on {
+      text-align: right;
+      width: 100%; }
+  .switch .label-left {
+    color: #a8d8f8;
+    text-shadow: 0px 0px 1px #d7edfc; }
+  .switch .labels .label:not(.label-on) {
+    display: inline-block;
+    margin-top: 0.2rem;
+    text-align: center; }
+    .switch .labels .label:not(.label-on).label-left {
+      -webkit-transform: translateX(-50%);
+      -moz-transform: translateX(-50%);
+      -ms-transform: translateX(-50%);
+      transform: translateX(-50%); }
+    .switch .labels .label:not(.label-on).label-right {
+      -webkit-transform: translateX(30%);
+      -moz-transform: translateX(30%);
+      -ms-transform: translateX(30%);
+      transform: translateX(30%); }
   .switch.vertical .label {
     margin: 0;
     text-align: center; }
@@ -195,7 +225,10 @@ body, html {
     -moz-transform: rotate(180deg);
     -ms-transform: rotate(180deg);
     transform: rotate(180deg); }
-  .switch.on .label-on {
+  .switch.on .label-left {
+    color: #777;
+    text-shadow: none; }
+  .switch.on .label-right {
     color: #a8d8f8;
     text-shadow: 0px 0px 1px #d7edfc; }
   .switch.on.vertical .rocker {

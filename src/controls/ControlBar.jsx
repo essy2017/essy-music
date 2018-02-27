@@ -202,6 +202,43 @@ export default class ControlBar extends React.Component {
     return (
       <div id="controls" style={style}>
 
+        <div id="ctrl-cont" className="ctrl-panel">
+          <div className="ctrl-row">
+            <Pot
+              angle={270}
+              domain={[0, 3]}
+              label="Glide"
+              labels={[0, 2, 4, 6, 8, 10]}
+              onChange={this.handleChange.bind(this, 'controls', 'glide')}
+              size={knobSize}
+              ticks={11}
+              value={props.controls.glide}
+            />
+          </div>
+          <div className="ctrl-row lfo-rate">
+            <Pot
+              angle={270}
+              domain={[0.1, 20]}
+              label="LFO Rate"
+              labels={[0, 2, 4, 6, 8, 10]}
+              onChange={this.handleChange.bind(this, 'controls', 'lfoRate')}
+              size={knobSize}
+              ticks={11}
+              value={props.controls.lfoRate}
+            />
+          </div>
+          <div className="ctrl-row lfo-noise">
+            <Switch
+              height={switchHeight}
+              labels={['LFO', 'Noise']}
+              onChange={this.handleChange.bind(this, 'controls', 'lfoNoise')}
+              value={props.controls.lfoNoise}
+              values={['lfo', 'noise']}
+              width={switchWidth}
+            />
+          </div>
+        </div>
+
         <div id="ctrl-osc" className="ctrl-panel">
           <div className="ctrl-row-label">Oscillator 1</div>
           <div className="ctrl-row">
@@ -410,8 +447,8 @@ export default class ControlBar extends React.Component {
             <div className="ctrl-row-label-sm">Filter Modulation</div>
             <Switch
               height={switchHeight}
-              onChange={this.handleChange.bind(this, 'filter', 'modOn')}
-              value={props.filter.modOn}
+              onChange={this.handleChange.bind(this, 'controls', 'filterOn')}
+              value={props.controls.filterOn}
               width={switchWidth}
             />
           </div>
@@ -513,6 +550,8 @@ export default class ControlBar extends React.Component {
               value={props.envelope.sustain}
             />
           </div>
+
+          <div className="ctrl-row-label-lg">Modifiers</div>
         </div>
 
       </div>
@@ -522,6 +561,7 @@ export default class ControlBar extends React.Component {
 }
 
 ControlBar.propTypes = {
+  controls    : PropTypes.object.isRequired,
   filter      : PropTypes.object.isRequired,
   height      : PropTypes.number.isRequired,
   noise       : PropTypes.object.isRequired,

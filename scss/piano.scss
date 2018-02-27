@@ -27,9 +27,23 @@
   }
 }
 
+#ctrl-cont {
+  padding:10px 10px 0 10px;
+
+  .lfo-rate {
+    position:relative;
+    top:30px;
+  }
+
+  .lfo-noise {
+    position:relative;
+    top:60px;
+  }
+}
+
 #ctrl-osc {
   padding:10px 10px 0 10px;
-  width:28%;
+  width:25%;
 }
 
 #ctrl-mixer {
@@ -59,6 +73,11 @@
 
   .filter-2 {
     margin-top:40px;
+  }
+
+  .ctrl-row-label-lg {
+    position:relative;
+    top:40px;
   }
 }
 
@@ -222,9 +241,28 @@ $color-blue   : rgb(159,201,209);
   .label {
     color:#777;
     font-size:0.5rem;
-    margin:0.2rem 0 0 0.5rem;
-    text-align:right;
     text-transform:uppercase;
+    &.label-on {
+      text-align:right;
+      width:100%;
+    }
+  }
+
+  .label-left {
+    color:#a8d8f8;
+    text-shadow:0px 0px 1px lighten(#a8d8f8, 10%);
+  }
+
+  .labels .label:not(.label-on) {
+    display:inline-block;
+    margin-top:0.2rem;
+    text-align:center;
+    &.label-left {
+      @include util-transform(translateX(-50%));
+    }
+    &.label-right {
+      @include util-transform(translateX(30%));
+    }
   }
 
   &.vertical {
@@ -258,7 +296,11 @@ $color-blue   : rgb(159,201,209);
     .rocker {
       @include util-transform(rotate(180deg));
     }
-    .label-on {
+    .label-left {
+      color:#777;
+      text-shadow:none;
+    }
+    .label-right {
       color:#a8d8f8;
       text-shadow:0px 0px 1px lighten(#a8d8f8, 10%);
     }

@@ -55,8 +55,13 @@ export default class Switch extends React.Component {
           <div className="sq sq-3"></div>
           <div className="sq sq-4"></div>
         </div>
-        { isVert && <div className="label label-bottom">{props.labels[1]}</div> }
-        { !isVert && <div className="label label-on">{props.labels[1]}</div> }
+        {
+          isVert ? <div className="label label-bottom">{props.labels[1]}</div> :
+            <div className="labels">
+              <div className="label label-left">{props.labels[0]}</div>
+              <div className={'label label-right' + (props.labels[1] === 'on' ? ' label-on' : '')}>{props.labels[1]}</div>
+            </div>
+        }
       </div>
     );
   }

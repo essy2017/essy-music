@@ -106,28 +106,47 @@ class MoogFilter extends Tone.AudioNode {
     this.createInsOuts(1, 1);
 
     this.frequency = new Tone.Signal(options.filter.frequency, Tone.Type.Frequency);
-    this.detune = new Tone.Signal(0, Tone.Type.Cents);
-    this.gain = new Tone.Signal({ value: 0, convert: false });
-    this.Q = new Tone.Signal(options.filter.Q);
-    this._type = options.filter.type;
-    this._rolloff = options.filter.rolloff;
+    this.detune    = new Tone.Signal(0, Tone.Type.Cents);
+    this.gain      = new Tone.Signal({ value: 0, convert: false });
+    this.Q         = new Tone.Signal(options.filter.Q);
 
     this.env = new Tone.ScaledEnvelope({
       attack  : options.envelope.attack,
       decay   : options.envelope.decay,
       sustain : options.envelope.sustain,
       release : options.envelope.decay,
-      min    : options.filter.frequency,
-      max : options.contour * options.filter.frequency
+      min     : options.filter.frequency,
+      max     : options.contour * options.filter.frequency
     });
-    this._contour = options.contour;
-    this._frequency = options.filter.frequency;
-    this.env.connect(this.frequency);
 
-    this.lfo = new Tone.LFO(10, 0, options.filter.frequency);
-    //this.setModulation(options.modOn);
-    this.modulation = options.modOn;
-    this.rolloff = options.filter.rolloff;
+    this.lfo = new Tone.LFO({
+      frequency : options.lfoRate,
+      min       : 0,
+      max       : options.filter.frequency,
+      type      : 'triangle'
+    }).start();
+
+    this.noise = new Tone.Noise('white').start();
+    this.noiseScale = new Tone.Scale(0.5 * options.filter.frequency, options.filter.frequency);
+    this.noise.connect(this.noiseScale);
+    /*this.noiseFilter = new Tone.AutoFilter({
+      frequency     : 1,
+      baseFrequency : options.filter.frequency,
+      octaves       : 8
+      //max       : 15000//options.filter.frequency
+    });
+    this.noise.connect(this.noiseFilter);*/
+
+    this._type      = options.filter.type;
+    this._rolloff   = options.filter.rolloff;
+    this._contour   = options.contour;
+    this._frequency = options.filter.frequency;
+    //this.env.connect(this.frequency);
+
+
+    this.rolloff  = options.filter.rolloff;
+    this.lfoRate  = options.lfoRate;
+    this.lfoNoise = options.lfoNoise;
 
   }
 
@@ -139,73 +158,75 @@ class MoogFilter extends Tone.AudioNode {
     this.env.triggerRelease(time);
   }
 
+ /**
+  * Sets the frequency envelope properties.
+  * @method setEnvelope
+  * @param options {Object} With properties:
+  *   attack {Number}
+  *   contour {Number}
+  *   decay {Number}
+  *   sustain {Number}
+  */
   setEnvelope (options) {
-
     this.env.attack  = options.attack;
     this.env.decay   = options.decay;
     this.env.sustain = options.sustain;
     this.env.release = options.decay;
-    this.env.max = options.contour * this._frequency;
-    this._contour = options.contour;
-    console.log(this.frequency, options.contour);
-    console.log(this.env.min, this.env.max);
+    this.env.max     = options.contour * this._frequency;
+
+    this._contour    = options.contour;
   }
 
   setFrequency (freq) {
+
     this._frequency = freq;
     this.frequency.value = freq;
-    if (this._modOn) {
+
+    //this.noiseFilter.disconnect();
+    this.noiseScale.disconnect();
+    this.lfo.disconnect();
+
+    if (this._lfoNoise === 'lfo') {
       this.lfo.max = freq;
-      this.lfo.disconnect();
       this.lfo.connect(this.frequency);
     }
     else {
-      this.env.min = freq;
-      this.env.max = freq * this._contour;
-      this.env.disconnect();
-      this.env.connect(this.frequency);
+      this.noiseScale.set('min', 0.5 * freq);
+      this.noiseScale.set('max', freq);
+      this.noiseScale.connect(this.frequency);
     }
-/*    this.lfo.max = freq;
-    this.env.disconnect();
-    this.env.connect(this.frequency);
-    if (this.modOn) {
-      this.lfo.disconnect();
+  }
+
+
+ /**
+  * Setter for LFO vs noise.
+  * @method lfoNoise
+  * @param lfoNoise {String} "lfo" or "noise".
+  */
+  set lfoNoise (lfoNoise) {
+
+    this._lfoNoise = lfoNoise;
+
+    if (lfoNoise === 'lfo') {
+      this.noiseScale.disconnect();
       this.lfo.connect(this.frequency);
-    }*/
-  }
-
- /**
-  * Gets modulation state.
-  * @method modulation
-  * @return {Boolean}
-  */
-  get modulation () {
-    return this._modOn;
-  }
-
- /**
-  * Sets modulation state.
-  * @method modulation
-  * @param mod {Boolean} True to turn on.
-  */
-  set modulation (mod) {
-
-    if (mod) {
-      if (!this._modOn) {
-        this.env.disconnect();
-        this.lfo.connect(this.frequency);
-        this.lfo.start();
-      }
-      this._modOn = true;
+      this.lfo.start();
     }
     else {
-      if (this._modOn) {
-        this.lfo.stop();
-        this.lfo.disconnect();
-        this.env.connect(this.frequency);
-      }
-      this._modOn = false;
+      this.lfo.stop();
+      this.lfo.disconnect();
+      this.frequency.value = this._frequency;
+      this.noiseScale.connect(this.frequency);
     }
+  }
+
+ /**
+  * Setter for LFO rate.
+  * @method lfoRate
+  * @param rate {Number}
+  */
+  set lfoRate (rate) {
+    this.lfo.frequency.value = rate;
   }
 
  /**
@@ -263,7 +284,8 @@ MoogFilter.defaults = {
     type      : 'lowpass',
     rolloff   : -24
   },
-  modOn : false
+  lfoNoise : 'lfo',
+  lfoRate  : 10
 };
 
 
@@ -296,9 +318,13 @@ class Moog extends Tone.Monophonic {
     this.filter      = new MoogFilter({
       envelope : options.filter,
       filter   : options.filter,
-      modOn    : options.filter.modOn
+      lfoNoise : options.lfoNoise,
+      lfoRate  : options.lfoRate
     });
 
+    this._filterOn  = options.filterOn;
+
+    this.portamento = options.portamento;
     this.frequency1 = this.oscillator1.frequency;
     this.frequency2 = this.oscillator2.frequency;
     this.frequency3 = this.oscillator3.frequency;
@@ -321,12 +347,27 @@ class Moog extends Tone.Monophonic {
   connectComponent (component, connect) {
     if (connect) {
       component.on = true;
-      component.chain(this.filter, this.envelope, this.output);
+      component.disconnect();
+      if (this._filterOn) {
+        component.chain(this.filter, this.envelope, this.output);
+      }
+      else {
+        component.chain(this.envelope, this.output);
+      }
+      //component.chain(this.filter, this.envelope, this.output);
     }
     else {
       component.on = false;
       component.disconnect();
     }
+  }
+
+  set filterOn (on) {
+    this._filterOn = on;
+    this.connectComponent(this.oscillator1, this.oscillator1.on);
+    this.connectComponent(this.oscillator2, this.oscillator2.on);
+    this.connectComponent(this.oscillator3, this.oscillator3.on);
+    this.connectComponent(this.noise, this.noise.on);
   }
 
  /**
@@ -359,7 +400,15 @@ class Moog extends Tone.Monophonic {
     this.filter.setFrequency(options.frequency);
     this.filter.setEnvelope(options);
     this.filter.set('Q', options.resonance);
-    this.filter.modulation = options.modOn;
+    //this.filter.modulation = options.modOn;
+  }
+
+  setLFORate (rate) {
+    this.filter.lfoRate = rate;
+  }
+
+  setLFONoise (lfoNoise) {
+    this.filter.lfoNoise = lfoNoise;
   }
 
  /**
@@ -485,6 +534,24 @@ class Moog extends Tone.Monophonic {
 }
 
 Moog.defaults = {
+  envelope: {
+    attack  : 0.005,
+    decay   : 0.1,
+    sustain : 0.3,
+    release : 1
+  },
+  filter: {
+    type      : 'lowpass',
+    frequency : 22000,
+    Q         : 0.5,
+    rolloff   : -24,
+    attack    : 0.005,
+    decay     : 0.1,
+    sustain   : 0.5
+  },
+  filterOn : true,
+  lfoNoise : 'lfo',
+  lfoRate  : 10,
   noise: {
     on     : false,
     type   : 'pink',
@@ -509,22 +576,6 @@ Moog.defaults = {
     range   : 2,
     type    : 'triangle',
     volume  : 0.5
-  },
-  envelope: {
-    attack  : 0.005,
-    decay   : 0.1,
-    sustain : 0.3,
-    release : 1
-  },
-  filter: {
-    type      : 'lowpass',
-    frequency : 22000,
-    modOn     : false,
-    Q         : 0.5,
-    rolloff   : -24,
-    attack    : 0.005,
-    decay     : 0.1,
-    sustain   : 0.5
   },
   portamento: 0
 };
@@ -556,7 +607,8 @@ export default class Piano extends React.Component {
       props.oscillator3,
       props.noise,
       props.envelope,
-      props.filter
+      props.filter,
+      props.controls
     );
     this.mouseDown        = false;
     this.handleMouseUpDoc = this.handleMouseUpDoc.bind(this);
@@ -599,6 +651,13 @@ export default class Piano extends React.Component {
     if (props.filter !== nextProps.filter) {
       synth.setFilter(nextProps.filter);
     }
+
+    if (props.controls !== nextProps.controls) {
+      synth.filterOn = nextProps.controls.filterOn;
+      synth.portamento = nextProps.controls.glide;
+      synth.setLFORate(nextProps.controls.lfoRate);
+      synth.setLFONoise(nextProps.controls.lfoNoise);
+    }
   }
 
  /**
@@ -627,9 +686,13 @@ export default class Piano extends React.Component {
   *   frequency {Number}
   *   rolloff {Number}
   *   type {String}
+  * @param controls {Object} With properties:
+  *   glide {Number}
+  *   lfoNoise {String} "lfo" or "noise".
+  *   lfoRate {Number}
   * @return {Moog}
   */
-  getSynth (osc1, osc2, osc3, noise, envelope, filter) {
+  getSynth (osc1, osc2, osc3, noise, envelope, filter, controls) {
 
     if (this.synth) {
       this.synth.dispose();
@@ -637,7 +700,10 @@ export default class Piano extends React.Component {
     }
 
     const synth = new Moog({
-      noise: noise,
+      filterOn    : controls.filterOn,
+      lfoNoise    : controls.lfoNoise,
+      lfoRate     : controls.lfoRate,
+      noise       : noise,
       oscillator1 : osc1,
       oscillator2 : osc2,
       oscillator3 : osc3,
@@ -648,15 +714,15 @@ export default class Piano extends React.Component {
         release : envelope.decay
       },
       filter : {
-        freqeuency : filter.frequency,
-        modOn      : filter.modOn,
-        Q          : filter.resonance,
-        rolloff    : filter.rolloff,
-        type       : filter.type,
         attack     : filter.attack,
         decay      : filter.decay,
-        sustain    : filter.sustain
-      }
+        freqeuency : filter.frequency,
+        Q          : filter.resonance,
+        rolloff    : filter.rolloff,
+        sustain    : filter.sustain,
+        type       : filter.type
+      },
+      portamento : controls.glide
     });
     const reverb = 0.5;
     const rev = new Tone.JCReverb(reverb);
@@ -812,6 +878,7 @@ export default class Piano extends React.Component {
 }
 
 Piano.propTypes = {
+  controls    : PropTypes.object.isRequired,
   envelope    : PropTypes.object.isRequired,
   filter      : PropTypes.object.isRequired,
   height      : PropTypes.number.isRequired,
