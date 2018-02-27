@@ -106,7 +106,7 @@ class MoogFilter extends Tone.AudioNode {
     this.createInsOuts(1, 1);
 
     this.frequency = new Tone.Signal(options.filter.frequency, Tone.Type.Frequency);
-    this.detune    = new Tone.Signal(0, Tone.Type.Cents);
+    //this.detune    = new Tone.Signal(0, Tone.Type.Cents);
     this.gain      = new Tone.Signal({ value: 0, convert: false });
     this.Q         = new Tone.Signal(options.filter.Q);
 
@@ -129,13 +129,6 @@ class MoogFilter extends Tone.AudioNode {
     this.noise = new Tone.Noise('white').start();
     this.noiseScale = new Tone.Scale(0.5 * options.filter.frequency, options.filter.frequency);
     this.noise.connect(this.noiseScale);
-    /*this.noiseFilter = new Tone.AutoFilter({
-      frequency     : 1,
-      baseFrequency : options.filter.frequency,
-      octaves       : 8
-      //max       : 15000//options.filter.frequency
-    });
-    this.noise.connect(this.noiseFilter);*/
 
     this._type      = options.filter.type;
     this._rolloff   = options.filter.rolloff;
@@ -177,12 +170,16 @@ class MoogFilter extends Tone.AudioNode {
     this._contour    = options.contour;
   }
 
+ /**
+  * Sets the frequency value.
+  * @method setFrequency
+  * @param freq {Number}
+  */
   setFrequency (freq) {
 
     this._frequency = freq;
     this.frequency.value = freq;
 
-    //this.noiseFilter.disconnect();
     this.noiseScale.disconnect();
     this.lfo.disconnect();
 
@@ -254,7 +251,7 @@ class MoogFilter extends Tone.AudioNode {
       const filter = this.context.createBiquadFilter();
       filter.type = this._type;
       this.frequency.connect(filter.frequency);
-      this.detune.connect(filter.detune);
+      //this.detune.connect(filter.detune);
       this.Q.connect(filter.Q);
       this.gain.connect(filter.gain);
       this._filters[count] = filter;
@@ -278,6 +275,7 @@ MoogFilter.defaults = {
     decay   : 0.2,
     sustain : 0.3
   },
+  eqOsc : 'eq',
   filter : {
     frequency : 22000,
     Q         : 0,
@@ -400,13 +398,22 @@ class Moog extends Tone.Monophonic {
     this.filter.setFrequency(options.frequency);
     this.filter.setEnvelope(options);
     this.filter.set('Q', options.resonance);
-    //this.filter.modulation = options.modOn;
   }
 
+ /**
+  * Sets rate on LFO for filter.
+  * @method setLFORate
+  * @param rate {Number}
+  */
   setLFORate (rate) {
     this.filter.lfoRate = rate;
   }
 
+ /**
+  * Sets LFO / noise filter selection.
+  * @method setLFONoise
+  * @param lfoNoise {String} "lfo" or "noise".
+  */
   setLFONoise (lfoNoise) {
     this.filter.lfoNoise = lfoNoise;
   }
@@ -540,6 +547,7 @@ Moog.defaults = {
     sustain : 0.3,
     release : 1
   },
+  eqOsc : 'eq',
   filter: {
     type      : 'lowpass',
     frequency : 22000,

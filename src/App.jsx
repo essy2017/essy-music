@@ -23,9 +23,10 @@ export default class App extends React.Component {
     super(props);
     this.state = {
       controls: {
+        eqOsc    : 'eq',
         filterOn : true,
         glide    : 0,
-        lfoNoise : 'noise',
+        lfoNoise : 'lfo',
         lfoRate  : 10
       },
       envelope: {

@@ -39,6 +39,9 @@ body, html {
   #ctrl-cont .lfo-noise {
     position: relative;
     top: 60px; }
+  #ctrl-cont .eq-osc {
+    position: relative;
+    top: 90px; }
 
 #ctrl-osc {
   padding: 10px 10px 0 10px;
@@ -50,6 +53,36 @@ body, html {
   #ctrl-mixer .ctrl-row-label-lg {
     position: relative;
     top: 126px; }
+  #ctrl-mixer .vol-1 .switch-wrap {
+    position: relative;
+    top: 32px; }
+  #ctrl-mixer .noise {
+    height: 0px;
+    left: 94px;
+    position: relative;
+    top: 12px; }
+    #ctrl-mixer .noise .switch-wrap.on {
+      position: relative;
+      top: 18px; }
+    #ctrl-mixer .noise .switch-wrap.type {
+      position: relative;
+      top: -4px; }
+    #ctrl-mixer .noise .pot {
+      top: -13px; }
+      #ctrl-mixer .noise .pot .label {
+        margin-left: -7px; }
+  #ctrl-mixer .vol-2 {
+    position: relative;
+    top: 46px; }
+    #ctrl-mixer .vol-2 .switch-wrap {
+      position: relative;
+      top: 24px; }
+  #ctrl-mixer .vol-3 {
+    position: relative;
+    top: 90px; }
+    #ctrl-mixer .vol-3 .switch-wrap {
+      position: relative;
+      top: 24px; }
 
 #ctrl-mod {
   padding: 10px 0 0 30px;
@@ -95,40 +128,6 @@ body, html {
 .ctrl-row {
   display: flex;
   justify-content: space-between; }
-
-.vol-1 .switch-wrap {
-  position: relative;
-  top: 32px; }
-
-.noise {
-  height: 0px;
-  left: 94px;
-  position: relative;
-  top: 12px; }
-  .noise .switch-wrap.on {
-    position: relative;
-    top: 18px; }
-  .noise .switch-wrap.type {
-    position: relative;
-    top: -4px; }
-  .noise .pot {
-    top: -13px; }
-    .noise .pot .label {
-      margin-left: -7px; }
-
-.vol-2 {
-  position: relative;
-  top: 46px; }
-  .vol-2 .switch-wrap {
-    position: relative;
-    top: 24px; }
-
-.vol-3 {
-  position: relative;
-  top: 90px; }
-  .vol-3 .switch-wrap {
-    position: relative;
-    top: 24px; }
 
 .switch-wrap {
   display: inline-block;

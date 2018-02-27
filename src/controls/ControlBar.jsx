@@ -237,6 +237,16 @@ export default class ControlBar extends React.Component {
               width={switchWidth}
             />
           </div>
+          <div className="ctrl-row eq-osc">
+            <Switch
+              height={switchHeight}
+              labels={['EQ', 'Osc 3']}
+              onChange={this.handleChange.bind(this, 'controls', 'eqOsc')}
+              value={props.controls.eqOsc}
+              values={['eq', 'osc']}
+              width={switchWidth}
+            />
+          </div>
         </div>
 
         <div id="ctrl-osc" className="ctrl-panel">
