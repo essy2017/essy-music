@@ -42,7 +42,24 @@
 }
 
 #ctrl-mod {
+  padding:10px 0 0 30px;
+  position:relative;
   width:33%;
+
+  .filter-switch {
+    left:-23px;
+    position:absolute;
+    text-align:center;
+    top:35px;
+    width:46px;
+    .ctrl-row-label-sm {
+      margin-bottom:0.2rem;
+    }
+  }
+
+  .filter-2 {
+    margin-top:40px;
+  }
 }
 
 
@@ -131,7 +148,7 @@
     display:inline-block;
     height:1px;
     position:relative;
-    top:-19px;
+    top:-16px;
     width:20px;
   }
   .switch {
@@ -257,6 +274,7 @@ $color-blue   : rgb(159,201,209);
   display:inline-block;
   margin:0 15px;
   position:relative;
+  user-select:none;
   .label {
     color:#ccc;
     font-size:0.5rem;

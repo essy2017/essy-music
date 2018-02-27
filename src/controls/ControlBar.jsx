@@ -196,6 +196,8 @@ export default class ControlBar extends React.Component {
     const knobSize     = 0.1 * props.height;
     const labelsType   = Object.keys(TYPE_MAP);
     const labelsRange  = Object.keys(RANGE_MAP).reverse();
+    const switchHeight = 16;
+    const switchWidth  = 32;
 
     return (
       <div id="controls" style={style}>
@@ -315,10 +317,10 @@ export default class ControlBar extends React.Component {
               <div className="switch-line"></div>
               <Switch
                 className="blue"
-                height={20}
+                height={switchHeight}
                 onChange={this.handleChange.bind(this, 'oscillator1', 'on')}
                 value={props.oscillator1.on}
-                width={40}
+                width={switchWidth}
               />
             </div>
           </div>
@@ -326,10 +328,10 @@ export default class ControlBar extends React.Component {
             <div className="switch-wrap switch-right on">
               <Switch
                 className="blue"
-                height={20}
+                height={switchHeight}
                 onChange={this.handleChange.bind(this, 'noise', 'on')}
                 value={props.noise.on}
-                width={40}
+                width={switchWidth}
               />
               <div className="switch-line"></div>
             </div>
@@ -346,13 +348,13 @@ export default class ControlBar extends React.Component {
             <div className="switch-wrap type">
               <Switch
                 className="blue"
-                height={20}
+                height={switchHeight}
                 labels={['pink', 'white']}
                 onChange={this.handleChange.bind(this, 'noise', 'type')}
                 value={props.noise.type}
                 values={['pink', 'white']}
                 vertical={true}
-                width={40}
+                width={switchWidth}
               />
             </div>
           </div>
@@ -370,10 +372,10 @@ export default class ControlBar extends React.Component {
               <div className="switch-line"></div>
               <Switch
                 className="blue"
-                height={20}
+                height={switchHeight}
                 onChange={this.handleChange.bind(this, 'oscillator2', 'on')}
                 value={props.oscillator2.on}
-                width={40}
+                width={switchWidth}
               />
             </div>
           </div>
@@ -392,10 +394,10 @@ export default class ControlBar extends React.Component {
               <div className="switch-line"></div>
               <Switch
                 className="blue"
-                height={20}
+                height={switchHeight}
                 onChange={this.handleChange.bind(this, 'oscillator3', 'on')}
                 value={props.oscillator3.on}
-                width={40}
+                width={switchWidth}
               />
             </div>
           </div>
@@ -404,7 +406,81 @@ export default class ControlBar extends React.Component {
         </div>
 
         <div id="ctrl-mod" className="ctrl-panel">
-          <div className="ctrl-row-label">Loudness Control</div>
+          <div className="filter-switch switch-wrap">
+            <div className="ctrl-row-label-sm">Filter Modulation</div>
+            <Switch
+              height={switchHeight}
+              onChange={this.handleChange.bind(this, 'filter', 'modOn')}
+              value={props.filter.modOn}
+              width={switchWidth}
+            />
+          </div>
+          <div className="ctrl-row-label">Filter</div>
+          <div className="ctrl-row">
+            <Pot
+              angle={270}
+              domain={[0, 32000]}
+              label="Cutoff"
+              labels={[-4, -2, 0, 2, 4]}
+              onChange={this.handleChange.bind(this, 'filter', 'frequency')}
+              size={knobSize}
+              ticks={9}
+              value={props.filter.frequency}
+            />
+            <Pot
+              angle={270}
+              domain={[0, 20]}
+              label="Emphasis"
+              labels={[0, 2, 4, 6, 8, 10]}
+              onChange={this.handleChange.bind(this, 'filter', 'resonance')}
+              size={knobSize}
+              ticks={11}
+              value={props.filter.resonance}
+            />
+            <Pot
+              angle={270}
+              domain={[1, 5]}
+              label="Contour"
+              labels={[0, 2, 4, 6, 8, 10]}
+              onChange={this.handleChange.bind(this, 'filter', 'contour')}
+              size={knobSize}
+              ticks={11}
+              value={props.filter.contour}
+            />
+          </div>
+          <div className="ctrl-row filter-2">
+            <Pot
+              angle={270}
+              domain={[0, 15]}
+              label="Attack Time"
+              labels={['msec', 10, 200, 600, 1, 5, 10, 'sec']}
+              onChange={this.handleChange.bind(this, 'filter', 'attack')}
+              size={knobSize}
+              ticks={15}
+              value={attackToCtrlVal(props.filter.attack)}
+            />
+            <Pot
+              angle={270}
+              domain={[0, 15]}
+              label="Decay Time"
+              labels={['msec', 10, 200, 600, 1, 5, 10, 'sec']}
+              onChange={this.handleChange.bind(this, 'filter', 'decay')}
+              size={knobSize}
+              ticks={15}
+              value={attackToCtrlVal(props.filter.decay)}
+            />
+            <Pot
+              angle={270}
+              domain={[0, 1]}
+              label="Sustain"
+              labels={[0, 2, 4, 6, 8, 10]}
+              onChange={this.handleChange.bind(this, 'filter', 'sustain')}
+              size={knobSize}
+              ticks={11}
+              value={props.filter.sustain}
+            />
+          </div>
+          <div className="ctrl-row-label mt-25">Loudness Control</div>
           <div className="ctrl-row">
             <Pot
               angle={270}
@@ -446,6 +522,7 @@ export default class ControlBar extends React.Component {
 }
 
 ControlBar.propTypes = {
+  filter      : PropTypes.object.isRequired,
   height      : PropTypes.number.isRequired,
   noise       : PropTypes.object.isRequired,
   onChange    : PropTypes.func.isRequired,

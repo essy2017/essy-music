@@ -22,44 +22,50 @@ export default class App extends React.Component {
   constructor (props) {
     super(props);
     this.state = {
-      attack    : 0.005,
-      decay     : 0.1,
-      detune    : 0,
+
       octaveMin : 2,
       octaveMax : 3,
-      reverb    : 0.5,
-      sustain   : 0.3,
-      type      : 'triangle',
 
       envelope: {
-        attack  : 6,//0.005,
+        attack  : 0.005,
         decay   : 0.01,
         sustain : 0.3
+      },
+      filter: {
+        attack    : 0.005,
+        contour   : 2,
+        decay     : 0.1,
+        sustain   : 0.1,
+        modOn     : true,
+        resonance : 0,
+        frequency : 22000,
+        rolloff   : -24,
+        type      : 'lowpass'
       },
       noise : {
         on     : true,
         type   : 'pink',
-        volume : 0
+        volume : 0.5
       },
       oscillator1 : {
         on     : true,
         range  : 2,
         type   : 'triangle',
-        volume : 0
+        volume : 0.5
       },
       oscillator2 : {
         detune : 0,
         on     : true,
         range  : 3,
         type   : 'sawtooth',
-        volume : 0
+        volume : 0.5
       },
       oscillator3 : {
         detune : 0,
         on     : true,
         range  : 3,
         type   : 'sine',
-        volume : 0
+        volume : 0.5
       }
     };
     this.handleChangeControl = this.handleChangeControl.bind(this);
@@ -96,6 +102,7 @@ export default class App extends React.Component {
       <div id="piano-wrap" style={{ width: WIDTH + 4 }}>
         <ControlBar
           envelope={state.envelope}
+          filter={state.filter}
           height={300}
           noise={state.noise}
           onChange={this.handleChangeControl}
@@ -106,6 +113,7 @@ export default class App extends React.Component {
         />
         <Piano
           envelope={state.envelope}
+          filter={state.filter}
           height={200}
           noise={state.noise}
           oscillator1={state.oscillator1}

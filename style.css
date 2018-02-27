@@ -43,7 +43,19 @@ body, html {
     top: 126px; }
 
 #ctrl-mod {
+  padding: 10px 0 0 30px;
+  position: relative;
   width: 33%; }
+  #ctrl-mod .filter-switch {
+    left: -23px;
+    position: absolute;
+    text-align: center;
+    top: 35px;
+    width: 46px; }
+    #ctrl-mod .filter-switch .ctrl-row-label-sm {
+      margin-bottom: 0.2rem; }
+  #ctrl-mod .filter-2 {
+    margin-top: 40px; }
 
 .mt-15 {
   margin-top: 1.5rem; }
@@ -114,7 +126,7 @@ body, html {
     display: inline-block;
     height: 1px;
     position: relative;
-    top: -19px;
+    top: -16px;
     width: 20px; }
   .switch-wrap .switch {
     display: inline-block; }
@@ -196,7 +208,8 @@ body, html {
 .pot {
   display: inline-block;
   margin: 0 15px;
-  position: relative; }
+  position: relative;
+  user-select: none; }
   .pot .label {
     color: #ccc;
     font-size: 0.5rem;
