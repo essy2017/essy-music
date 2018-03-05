@@ -22,12 +22,12 @@ const ATTACK_STEPS = [0, 0.01, 0.2, 0.6, 1, 5, 10, 15];
  * @type Object
  */
 const RANGE_MAP = {
-  'LO' : -1,
-  '32' : 1,
-  '16' : 2,
-  '8'  : 3,
-  '4'  : 4,
-  '2'  : 5
+  'LO' : 1,
+  '32' : 2,
+  '16' : 3,
+  '8'  : 4,
+  '4'  : 5,
+  '2'  : 6
 };
 
 /**
@@ -411,31 +411,11 @@ export default class ControlBar extends React.Component {
               angle={270}
               domain={[0, 1]}
               label="Modulation Mix"
-              labels={['Filter / OSC 3', 2, 4, 6, 8, 'LFO / Noise']}
+              labels={['Env', 2, 4, 6, 8, 'LFO']}
               onChange={this.handleChange.bind(this, 'controls', 'modMix')}
               size={knobSize}
               ticks={11}
               value={props.controls.modMix}
-            />
-          </div>
-          <div className="ctrl-row eq-osc">
-            <Switch
-              height={switchHeight}
-              labels={['Filter', 'Osc 3']}
-              onChange={this.handleChange.bind(this, 'controls', 'eqOsc')}
-              value={props.controls.eqOsc}
-              values={['eq', 'osc']}
-              width={switchWidth}
-            />
-          </div>
-          <div className="ctrl-row lfo-noise">
-            <Switch
-              height={switchHeight}
-              labels={['LFO', 'Noise']}
-              onChange={this.handleChange.bind(this, 'controls', 'lfoNoise')}
-              value={props.controls.lfoNoise}
-              values={['lfo', 'noise']}
-              width={switchWidth}
             />
           </div>
           <div className="ctrl-row lfo-rate">
@@ -485,16 +465,6 @@ export default class ControlBar extends React.Component {
               size={knobSize}
               ticks={11}
               value={props.filter.resonance}
-            />
-            <Pot
-              angle={270}
-              domain={[1, 5]}
-              label="Contour"
-              labels={[0, 2, 4, 6, 8, 10]}
-              onChange={this.handleChange.bind(this, 'filterEnv', 'contour')}
-              size={knobSize}
-              ticks={11}
-              value={props.filterEnv.contour}
             />
           </div>
           <div className="ctrl-row filter-2">
