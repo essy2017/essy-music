@@ -31,25 +31,13 @@ body, html {
   .ctrl-panel:not(:last-child) {
     border-right: 1px solid #111; }
 
-#ctrl-cont {
-  padding: 10px 10px 0 10px; }
-  #ctrl-cont .lfo-rate {
-    position: relative;
-    top: 30px; }
-  #ctrl-cont .lfo-noise {
-    position: relative;
-    top: 60px; }
-  #ctrl-cont .eq-osc {
-    position: relative;
-    top: 90px; }
-
 #ctrl-osc {
   padding: 10px 10px 0 10px;
-  width: 25%; }
+  width: 23%; }
 
 #ctrl-mixer {
-  padding: 22px 20px 0 20px;
-  width: 30%; }
+  padding: 22px 10px 0 10px;
+  width: 27%; }
   #ctrl-mixer .ctrl-row-label-lg {
     position: relative;
     top: 126px; }
@@ -84,10 +72,48 @@ body, html {
       position: relative;
       top: 24px; }
 
+#ctrl-cont {
+  padding: 10px 10px 0 10px;
+  width: 12%; }
+  #ctrl-cont .mod-mix {
+    margin-top: 12px; }
+    #ctrl-cont .mod-mix .pot {
+      margin: auto; }
+      #ctrl-cont .mod-mix .pot .label {
+        margin-left: -10px; }
+      #ctrl-cont .mod-mix .pot .ticks .tick:first-child .tick-label {
+        top: 27px;
+        width: 40px; }
+      #ctrl-cont .mod-mix .pot .ticks .tick:last-child .tick-label {
+        top: 27px; }
+  #ctrl-cont .eq-osc {
+    position: relative;
+    top: 50px; }
+    #ctrl-cont .eq-osc .switch {
+      margin-left: 34px; }
+      #ctrl-cont .eq-osc .switch .label-right {
+        -webkit-transform: translateX(0);
+        -moz-transform: translateX(0);
+        -ms-transform: translateX(0);
+        transform: translateX(0); }
+  #ctrl-cont .lfo-noise {
+    position: relative;
+    top: 60px; }
+    #ctrl-cont .lfo-noise .switch {
+      margin-left: 34px; }
+  #ctrl-cont .lfo-rate {
+    position: relative;
+    top: 74px; }
+    #ctrl-cont .lfo-rate .pot {
+      margin: auto; }
+  #ctrl-cont .ctrl-row-label-lg {
+    position: relative;
+    top: 116px; }
+
 #ctrl-mod {
   padding: 10px 0 0 30px;
   position: relative;
-  width: 33%; }
+  width: 28%; }
   #ctrl-mod .filter-switch {
     left: -23px;
     position: absolute;
@@ -101,6 +127,16 @@ body, html {
   #ctrl-mod .ctrl-row-label-lg {
     position: relative;
     top: 40px; }
+
+#ctrl-out {
+  padding: 10px 10px 0 15px; }
+  #ctrl-out .glide {
+    margin-top: 12px; }
+  #ctrl-out .reverb {
+    margin-top: 39px; }
+  #ctrl-out .ctrl-row-label-lg {
+    position: relative;
+    top: 130px; }
 
 .mt-15 {
   margin-top: 1.5rem; }

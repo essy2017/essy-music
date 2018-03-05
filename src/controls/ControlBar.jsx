@@ -202,53 +202,6 @@ export default class ControlBar extends React.Component {
     return (
       <div id="controls" style={style}>
 
-        <div id="ctrl-cont" className="ctrl-panel">
-          <div className="ctrl-row">
-            <Pot
-              angle={270}
-              domain={[0, 3]}
-              label="Glide"
-              labels={[0, 2, 4, 6, 8, 10]}
-              onChange={this.handleChange.bind(this, 'controls', 'glide')}
-              size={knobSize}
-              ticks={11}
-              value={props.controls.glide}
-            />
-          </div>
-          <div className="ctrl-row lfo-rate">
-            <Pot
-              angle={270}
-              domain={[0.1, 20]}
-              label="LFO Rate"
-              labels={[0, 2, 4, 6, 8, 10]}
-              onChange={this.handleChange.bind(this, 'controls', 'lfoRate')}
-              size={knobSize}
-              ticks={11}
-              value={props.controls.lfoRate}
-            />
-          </div>
-          <div className="ctrl-row lfo-noise">
-            <Switch
-              height={switchHeight}
-              labels={['LFO', 'Noise']}
-              onChange={this.handleChange.bind(this, 'controls', 'lfoNoise')}
-              value={props.controls.lfoNoise}
-              values={['lfo', 'noise']}
-              width={switchWidth}
-            />
-          </div>
-          <div className="ctrl-row eq-osc">
-            <Switch
-              height={switchHeight}
-              labels={['EQ', 'Osc 3']}
-              onChange={this.handleChange.bind(this, 'controls', 'eqOsc')}
-              value={props.controls.eqOsc}
-              values={['eq', 'osc']}
-              width={switchWidth}
-            />
-          </div>
-        </div>
-
         <div id="ctrl-osc" className="ctrl-panel">
           <div className="ctrl-row-label">Oscillator 1</div>
           <div className="ctrl-row">
@@ -452,13 +405,62 @@ export default class ControlBar extends React.Component {
           <div className="ctrl-row-label-lg">Mixer</div>
         </div>
 
+        <div id="ctrl-cont" className="ctrl-panel">
+          <div className="ctrl-row mod-mix">
+            <Pot
+              angle={270}
+              domain={[0, 1]}
+              label="Modulation Mix"
+              labels={['Filter / OSC 3', 2, 4, 6, 8, 'LFO / Noise']}
+              onChange={this.handleChange.bind(this, 'controls', 'modMix')}
+              size={knobSize}
+              ticks={11}
+              value={props.controls.modMix}
+            />
+          </div>
+          <div className="ctrl-row eq-osc">
+            <Switch
+              height={switchHeight}
+              labels={['Filter', 'Osc 3']}
+              onChange={this.handleChange.bind(this, 'controls', 'eqOsc')}
+              value={props.controls.eqOsc}
+              values={['eq', 'osc']}
+              width={switchWidth}
+            />
+          </div>
+          <div className="ctrl-row lfo-noise">
+            <Switch
+              height={switchHeight}
+              labels={['LFO', 'Noise']}
+              onChange={this.handleChange.bind(this, 'controls', 'lfoNoise')}
+              value={props.controls.lfoNoise}
+              values={['lfo', 'noise']}
+              width={switchWidth}
+            />
+          </div>
+          <div className="ctrl-row lfo-rate">
+            <Pot
+              angle={270}
+              domain={[0.1, 20]}
+              label="LFO Rate"
+              labels={[0, 2, 4, 6, 8, 10]}
+              onChange={this.handleChange.bind(this, 'controls', 'lfoRate')}
+              size={knobSize}
+              ticks={11}
+              value={props.controls.lfoRate}
+            />
+          </div>
+
+          <div className="ctrl-row-label-lg">Controllers</div>
+        </div>
+
         <div id="ctrl-mod" className="ctrl-panel">
           <div className="filter-switch switch-wrap">
             <div className="ctrl-row-label-sm">Filter Modulation</div>
             <Switch
               height={switchHeight}
-              onChange={this.handleChange.bind(this, 'controls', 'filterOn')}
-              value={props.controls.filterOn}
+              onChange={this.handleChange.bind(this, 'controls', 'filterModOn')}
+              value={props.controls.filterModOn}
               width={switchWidth}
             />
           </div>
@@ -562,6 +564,34 @@ export default class ControlBar extends React.Component {
           </div>
 
           <div className="ctrl-row-label-lg">Modifiers</div>
+        </div>
+
+        <div id="ctrl-out" className="ctrl-panel">
+          <div className="ctrl-row glide">
+            <Pot
+              angle={270}
+              domain={[0, 3]}
+              label="Glide"
+              labels={[0, 2, 4, 6, 8, 10]}
+              onChange={this.handleChange.bind(this, 'controls', 'glide')}
+              size={knobSize}
+              ticks={11}
+              value={props.controls.glide}
+            />
+          </div>
+          <div className="ctrl-row reverb">
+            <Pot
+              angle={270}
+              domain={[0, 1]}
+              label="Reverb"
+              labels={[0, 2, 4, 6, 8, 10]}
+              onChange={this.handleChange.bind(this, 'controls', 'reverb')}
+              size={knobSize}
+              ticks={11}
+              value={props.controls.reverb}
+            />
+          </div>
+          <div className="ctrl-row-label-lg">Output</div>
         </div>
 
       </div>

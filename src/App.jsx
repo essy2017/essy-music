@@ -23,11 +23,13 @@ export default class App extends React.Component {
     super(props);
     this.state = {
       controls: {
-        eqOsc    : 'eq',
-        filterOn : true,
-        glide    : 0,
-        lfoNoise : 'lfo',
-        lfoRate  : 10
+        eqOsc       : 'eq',
+        filterModOn : true,
+        glide       : 0,
+        lfoNoise    : 'lfo',
+        lfoRate     : 10,
+        modMix      : 0.5,
+        reverb      : 0.5
       },
       envelope: {
         attack  : 0.005,
@@ -39,8 +41,6 @@ export default class App extends React.Component {
         contour   : 2,
         decay     : 0.1,
         sustain   : 0.1,
-        lfoRate   : 10,
-        modOn     : true,
         resonance : 0,
         frequency : 22000,
         rolloff   : -24,

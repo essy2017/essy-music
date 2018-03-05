@@ -27,33 +27,14 @@
   }
 }
 
-#ctrl-cont {
-  padding:10px 10px 0 10px;
-
-  .lfo-rate {
-    position:relative;
-    top:30px;
-  }
-
-  .lfo-noise {
-    position:relative;
-    top:60px;
-  }
-
-  .eq-osc {
-    position:relative;
-    top:90px;
-  }
-}
-
 #ctrl-osc {
   padding:10px 10px 0 10px;
-  width:25%;
+  width:23%;
 }
 
 #ctrl-mixer {
-  padding:22px 20px 0 20px;
-  width:30%;
+  padding:22px 10px 0 10px;
+  width:27%;
   .ctrl-row-label-lg {
     position:relative;
     top:126px;
@@ -104,10 +85,67 @@
   }
 }
 
+#ctrl-cont {
+
+  padding:10px 10px 0 10px;
+  width:12%;
+
+  .mod-mix {
+    margin-top:12px;
+    .pot {
+      margin:auto;
+      .label {
+        margin-left:-10px;
+      }
+      .ticks {
+        .tick:first-child .tick-label {
+          top:27px;
+          width:40px;
+        }
+        .tick:last-child .tick-label {
+          top:27px;
+        }
+      }
+    }
+  }
+
+  .eq-osc {
+    position:relative;
+    top:50px;
+    .switch {
+      margin-left:34px;
+      .label-right {
+        @include util-transform(translateX(0));
+      }
+    }
+  }
+
+  .lfo-noise {
+    position:relative;
+    top:60px;
+    .switch {
+      margin-left:34px;
+    }
+  }
+
+  .lfo-rate {
+    position:relative;
+    top:74px;
+    .pot {
+      margin:auto;
+    }
+  }
+
+  .ctrl-row-label-lg {
+    position:relative;
+    top:116px;
+  }
+}
+
 #ctrl-mod {
   padding:10px 0 0 30px;
   position:relative;
-  width:33%;
+  width:28%;
 
   .filter-switch {
     left:-23px;
@@ -127,6 +165,22 @@
   .ctrl-row-label-lg {
     position:relative;
     top:40px;
+  }
+}
+
+#ctrl-out {
+  padding:10px 10px 0 15px;
+
+  .glide {
+    margin-top:12px;
+  }
+  .reverb {
+    margin-top:39px;
+  }
+
+  .ctrl-row-label-lg {
+    position:relative;
+    top:130px;
   }
 }
 

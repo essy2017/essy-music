@@ -44,8 +44,6 @@ function getData (octaves, range1, range2, range3) {
         note1 : notes[i] + (range1 + count),
         note2 : notes[i] + (range2 + count),
         note3 : notes[i] + (range3 + count),
-        freq1 : Math.pow(2, range1 - 1) * freq(freqCount),
-        freq2 : Math.pow(2, range2 - 1) * freq(freqCount),
         freq3 : Math.pow(2, range3 - 1) * freq(freqCount),
         sharp : false,
         index : index
@@ -56,8 +54,6 @@ function getData (octaves, range1, range2, range3) {
           note1 : notes[i] + '#' + (range1 + count),
           note2 : notes[i] + '#' + (range2 + count),
           note3 : notes[i] + '#' + (range3 + count),
-          freq1 : Math.pow(2, range1 - 1) * freq(freqCount),
-          freq2 : Math.pow(2, range2 - 1) * freq(freqCount),
           freq3 : Math.pow(2, range3 - 1) * freq(freqCount),
           sharp : true,
           index : index
@@ -73,8 +69,6 @@ function getData (octaves, range1, range2, range3) {
     note1 : 'C' + (range1 + count),
     note2 : 'C' + (range2 + count),
     note3 : 'C' + (range3 + count),
-    freq1 : Math.pow(2, range1 - 1) * freq(freqCount),
-    freq2 : Math.pow(2, range2 - 1) * freq(freqCount),
     freq3 : Math.pow(2, range3 - 1) * freq(freqCount),
     sharp : false,
     index : index
@@ -84,8 +78,6 @@ function getData (octaves, range1, range2, range3) {
     note1 : 'C#' + (range1 + count),
     note2 : 'C#' + (range2 + count),
     note3 : 'C#' + (range3 + count),
-    freq1 : Math.pow(2, range1 - 1) * freq(freqCount),
-    freq2 : Math.pow(2, range2 - 1) * freq(freqCount),
     freq3 : Math.pow(2, range3 - 1) * freq(freqCount),
     sharp : true,
     index : index
@@ -95,28 +87,153 @@ function getData (octaves, range1, range2, range3) {
 }
 
 
-class MoogFilter extends Tone.AudioNode {
+
+
+
+
+class Oscillators extends Tone.AudioNode {
 
   constructor (options) {
 
-    options = Tone.defaultArg(options, MoogFilter.defaults);
+    options = Tone.defaultArg(options, Oscillators.defaults);
 
-    super();
+    super(/*options*/);
 
     this.createInsOuts(1, 1);
 
-    this.frequency = new Tone.Signal(options.filter.frequency, Tone.Type.Frequency);
-    //this.detune    = new Tone.Signal(0, Tone.Type.Cents);
-    this.gain      = new Tone.Signal({ value: 0, convert: false });
-    this.Q         = new Tone.Signal(options.filter.Q);
+    this.osc1  = new Tone.Oscillator(options.oscillator1);
+    this.osc2  = new Tone.Oscillator(options.oscillator2);
+    this.osc3  = new Tone.Oscillator(options.oscillator3);
+    this.noise = new Tone.Noise(options.noise);
 
-    this.env = new Tone.ScaledEnvelope({
+    this.freq1 = this.osc1.frequency;
+    this.freq2 = this.osc2.frequency;
+    this.freq3 = this.osc3.frequency;
+
+    //this.output = new Tone.Gain();
+
+    this.connectComponent(this.osc1, options.oscillator1.on);
+    this.connectComponent(this.osc2, options.oscillator2.on);
+    this.connectComponent(this.osc3, options.oscillator3.on);
+    this.connectComponent(this.noise, options.noise.on);
+  }
+
+  connectComponent (component, connect) {
+    component.disconnect();
+    if (connect) {
+      component.on = true;
+      component.connect(this.output);
+    }
+    else {
+      component.on = false;
+    }
+    return this;
+  }
+
+  setComponent (component, options) {
+    component.type = options.type;
+    component.volume.value = options.volume;
+    if ('detune' in options) {
+      component.detune.value = options.detune;
+    }
+    if (options.on !== component.on) {
+      this.connectComponent(component, options.on);
+    }
+    return this;
+  }
+
+  setNotes (note1, note2, note3, time, portamento) {
+    if (portamento > 0) {
+      this.freq1.setValueAtTime(this.freq1.value, time);
+      this.freq2.setValueAtTime(this.freq2.value, time);
+      this.freq3.setValueAtTime(this.freq3.value, time);
+      this.freq1.exponentialRampToValueAtTime(note1, time + portamento);
+      this.freq2.exponentialRampToValueAtTime(note2, time + portamento);
+      this.freq3.exponentialRampToValueAtTime(note3, time + portamento);
+    }
+    else {
+      this.freq1.setValueAtTime(note1, time);
+      this.freq2.setValueAtTime(note2, time);
+      this.freq3.setValueAtTime(note3, time);
+    }
+    return this;
+  }
+
+  start (time) {
+    this.osc1.start(time);
+    this.osc2.start(time);
+    this.osc3.start(time);
+    this.noise.start(time);
+    return this;
+  }
+
+  stop (time) {
+    this.osc1.stop(time);
+    this.osc2.stop(time);
+    this.osc3.stop(time);
+    this.noise.stop(time);
+    return this;
+  }
+
+  dispose () {
+    return this;
+  }
+
+}
+
+Oscillators.defaults = {
+  noise: {
+    on     : false,
+    type   : 'pink',
+    volume : 0
+  },
+  oscillator1: {
+    on     : true,
+    range  : 1,
+    type   : 'triangle',
+    volume : 0.5
+  },
+  oscillator2: {
+    on      : true,
+    detune  : 10,
+    range   : 2,
+    type    : 'sawtooth',
+    volume  : 0.5
+  },
+  oscillator3: {
+    on      : true,
+    detune  : 0,
+    range   : 2,
+    type    : 'triangle',
+    volume  : 0.5
+  }
+};
+
+
+class Filter extends Tone.AudioNode {
+
+  constructor (src1, src2, options) {
+
+    options = Tone.defaultArg(options, Filter.defaults);
+
+    super();
+
+    this.createInsOuts(2, 1);
+
+    this.eqOscSource    = this.input[0] = src1;
+    this.lfoNoiseSource = this.input[1] = src2;
+    this.crossFade      = this.output = new Tone.CrossFade();
+    this.lfoNoiseFilter = new Tone.Filter(options.filter);
+    this.eqOscFilter    = new Tone.Filter(options.filter);
+
+
+    this.envelope = new Tone.ScaledEnvelope({
       attack  : options.envelope.attack,
-      decay   : options.envelope.decay,
+      decacy  : options.envelope.decay,
       sustain : options.envelope.sustain,
-      release : options.envelope.decay,
-      min     : options.filter.frequency,
-      max     : options.contour * options.filter.frequency
+      release : options.envelope.release,
+      min     : 0,
+      max     : options.filter.frequency
     });
 
     this.lfo = new Tone.LFO({
@@ -126,166 +243,144 @@ class MoogFilter extends Tone.AudioNode {
       type      : 'triangle'
     }).start();
 
-    this.noise = new Tone.Noise('white').start();
-    this.noiseScale = new Tone.Scale(0.5 * options.filter.frequency, options.filter.frequency);
-    this.noise.connect(this.noiseScale);
-
-    this._type      = options.filter.type;
-    this._rolloff   = options.filter.rolloff;
-    this._contour   = options.contour;
-    this._frequency = options.filter.frequency;
-    //this.env.connect(this.frequency);
+    this.noiseScale = new Tone.Scale(0, options.filter.frequency);
 
 
-    this.rolloff  = options.filter.rolloff;
-    this.lfoRate  = options.lfoRate;
+    this._filterFreq = options.filter.frequency;
+
+    this.eqOsc    = options.eqOsc;
     this.lfoNoise = options.lfoNoise;
+    this.modulate = options.modulate;
+
+    this.input[0].connect(this.eqOscFilter);
+    this.input[1].connect(this.lfoNoiseFilter);
+    this.eqOscFilter.connect(this.crossFade, 0, 0);
+    this.lfoNoiseFilter.connect(this.crossFade, 0, 1);
 
   }
 
-  start (time, velocity) {
-    this.env.triggerAttack(time, velocity);
-  }
+  setFilter (options) {
 
-  stop (time) {
-    this.env.triggerRelease(time);
-  }
+    this._filterFreq = options.frequency;
 
- /**
-  * Sets the frequency envelope properties.
-  * @method setEnvelope
-  * @param options {Object} With properties:
-  *   attack {Number}
-  *   contour {Number}
-  *   decay {Number}
-  *   sustain {Number}
-  */
-  setEnvelope (options) {
-    this.env.attack  = options.attack;
-    this.env.decay   = options.decay;
-    this.env.sustain = options.sustain;
-    this.env.release = options.decay;
-    this.env.max     = options.contour * this._frequency;
+    this.eqOscFilter.set('Q', options.resonance);
+    this.lfoNoiseFilter.set('Q', options.resonance);
 
-    this._contour    = options.contour;
-  }
+    this.lfo.max = options.frequency;
+    this.noiseScale.set('max', options.frequency);
 
- /**
-  * Sets the frequency value.
-  * @method setFrequency
-  * @param freq {Number}
-  */
-  setFrequency (freq) {
+    this.envelope.attack  = options.attack;
+    this.envelope.decay   = options.decay;
+    this.envelope.sustain = options.sustain;
+    this.envelope.release = options.release;
+    this.envelope.max     = options.frequency;
 
-    this._frequency = freq;
-    this.frequency.value = freq;
-
-    this.noiseScale.disconnect();
-    this.lfo.disconnect();
-
-    if (this._lfoNoise === 'lfo') {
-      this.lfo.max = freq;
-      this.lfo.connect(this.frequency);
-    }
-    else {
-      this.noiseScale.set('min', 0.5 * freq);
-      this.noiseScale.set('max', freq);
-      this.noiseScale.connect(this.frequency);
+    if (!this._modulate) {
+      this._resetFilter(options.frequency);
     }
   }
 
+  triggerAttack (time) {
+    this.envelope.triggerAttack(time);
+  }
 
- /**
-  * Setter for LFO vs noise.
-  * @method lfoNoise
-  * @param lfoNoise {String} "lfo" or "noise".
-  */
+  triggerRelease (time) {
+    this.envelope.triggerRelease(time);
+  }
+
+  set eqOsc (eqOsc) {
+    this._eqOsc = eqOsc;
+
+    if (eqOsc === 'eq') {
+      this.envelope.connect(this.eqOscFilter.frequency);
+    }
+    console.log('eqOsc', eqOsc);
+  }
+
   set lfoNoise (lfoNoise) {
-
     this._lfoNoise = lfoNoise;
+    if (this._modulate) {
+      this._connectLfoNoise(lfoNoise);
+    }
+  }
 
+  _resetFilter (freq) {
+    this.eqOscFilter.set('frequency', freq);
+    this.lfoNoiseFilter.set('frequency', freq);
+  }
+
+  _disconnectNoise () {
+    console.log('disconnectNoise');
+    this.noiseScale.disconnect();
+    this.lfoNoiseSource.noise.disconnect();
+    this.lfoNoiseSource.noise.set('playbackRate', 1);
+    this.lfoNoiseSource.connectComponent(this.lfoNoiseSource.noise, this.lfoNoiseSource.noise.on);
+  }
+
+  _connectLfoNoise (lfoNoise) {
     if (lfoNoise === 'lfo') {
-      this.noiseScale.disconnect();
-      this.lfo.connect(this.frequency);
-      this.lfo.start();
+      this._disconnectNoise();
+      this.lfo.connect(this.lfoNoiseFilter.frequency);
     }
     else {
-      this.lfo.stop();
+      console.log('connect noise');
       this.lfo.disconnect();
-      this.frequency.value = this._frequency;
-      this.noiseScale.connect(this.frequency);
+      this.lfoNoiseSource.noise.disconnect();
+      this.lfoNoiseSource.noise.set('playbackRate', 0.2);
+      this.lfoNoiseSource.noise.connect(this.noiseScale);
+      this.noiseScale.set('max', this._filterFreq);
+      this.noiseScale.connect(this.lfoNoiseFilter.frequency);
     }
   }
 
- /**
-  * Setter for LFO rate.
-  * @method lfoRate
-  * @param rate {Number}
-  */
   set lfoRate (rate) {
-    this.lfo.frequency.value = rate;
+    this.lfo.set('frequency', rate);
   }
 
- /**
-  * Gets rolloff property.
-  * @method rolloff
-  * @return {Number}
-  */
-  get rolloff () {
-    return this._rolloff;
+  set mix (mix) {
+    this.crossFade.fade.value = mix;
+    console.log('mix', mix);
   }
 
- /**
-  * Sets rolloff property.
-  * @method rolloff
-  * @param rolloff {Number}
-  */
-  set rolloff (rolloff) {
-    const possibilities = [-12, -24, -48, -96];
-    let cascadingCount = possibilities.indexOf(rolloff);
-    this._rolloff = rolloff;
-    cascadingCount += 1;
-    this.input.disconnect();
-    this._filters = new Array(cascadingCount);
-    for (let count = 0; count < cascadingCount; count++) {
-      const filter = this.context.createBiquadFilter();
-      filter.type = this._type;
-      this.frequency.connect(filter.frequency);
-      //this.detune.connect(filter.detune);
-      this.Q.connect(filter.Q);
-      this.gain.connect(filter.gain);
-      this._filters[count] = filter;
+  set modulate (mod) {
+    if (this._modulate = mod) {
+      this._connectLfoNoise(this._lfoNoise);
+      if (this._eqOsc === 'eq') {
+        this.envelope.connect(this.eqOscFilter.frequency);
+      }
+      else {
+        // connect osc...
+      }
     }
-    const connectionChain = [this.input].concat(this._filters).concat([this.output]);
-    Tone.connectSeries.apply(Tone, connectionChain);
+    else {
+      if (this._lfoNoise === 'lfo') {
+        this.lfo.disconnect();
+      }
+      else {
+        this._disconnectNoise();
+      }
+      this._resetFilter(this._filterFreq);
+    }
+
   }
 
 }
 
-/**
- * Default property values.
- * @property defaults
- * @type Object
- * @static
- */
-MoogFilter.defaults = {
-  contour  : 5,
+Filter.defaults = {
   envelope : {
-    attack  : 0.1,
-    decay   : 0.2,
-    sustain : 0.3
+    attack  : 0.005,
+    decay   : 0.1,
+    sustain : 0.5
   },
   eqOsc : 'eq',
   filter : {
-    frequency : 22000,
-    Q         : 0,
-    type      : 'lowpass',
-    rolloff   : -24
+    frequency : 1,
+    Q         : 0.5
   },
   lfoNoise : 'lfo',
-  lfoRate  : 10
+  lfoRate  : 0,
+  modulate : false
 };
-
 
 
 /*******************************************************************************
@@ -308,64 +403,112 @@ class Moog extends Tone.Monophonic {
 
     super(options);
 
-    this.oscillator1 = new Tone.Oscillator(options.oscillator1);
-    this.oscillator2 = new Tone.Oscillator(options.oscillator2);
-    this.oscillator3 = new Tone.Oscillator(options.oscillator3);
-    this.noise       = new Tone.Noise(options.noise);
+    this.source      = new Oscillators(options);
     this.envelope    = new Tone.AmplitudeEnvelope(options.envelope);
-    this.filter      = new MoogFilter({
-      envelope : options.filter,
+    this._reverb     = new Tone.JCReverb(options.reverb);
+
+    this.filter = new Filter(this.source, this.source, {
       filter   : options.filter,
       lfoNoise : options.lfoNoise,
-      lfoRate  : options.lfoRate
+      lfoRate  : options.lfoRate,
+      modulate : options.filterModOn
     });
 
-    this._filterOn  = options.filterOn;
+    //this.filter = new Tone.Filter(options.filter);
+    this.lfoNoiseFilter = new Tone.Filter(options.filter);
+    this.lfoNoiseSig    = new Tone.Signal();
+    //this.lfoNoiseVol    = new Tone.Volume();
 
-    this.portamento = options.portamento;
-    this.frequency1 = this.oscillator1.frequency;
-    this.frequency2 = this.oscillator2.frequency;
-    this.frequency3 = this.oscillator3.frequency;
+    this.eqOscFilter = new Tone.Filter(options.filter);
+    this.eqOscSig    = new Tone.Signal();
+    //this.eqOscVol    = new Tone.Volume();
 
+    this.eq = new Tone.Envelope({
+      attack  : options.filter.attack,
+      decay   : options.filter.decay,
+      sustain : options.filter.sustain,
+      release : options.filter.decay
+    });
+    /*this.envelope = new Tone.ScaledEnvelope({
+      attack  : options.envelope.attack,
+      decay   : options.envelope.decay,
+      sustain : options.envelope.sustain,
+      release : options.envelope.decay,
+      min     : this._node.value,
+      max     : options.envelope.contour * this._node.value
+    });*/
 
-    this.connectComponent(this.oscillator1, options.oscillator1.on);
-    this.connectComponent(this.oscillator2, options.oscillator2.on);
-    this.connectComponent(this.oscillator3, options.oscillator3.on);
-    this.connectComponent(this.noise, options.noise.on);
+    this.lfo = new Tone.LFO({
+      frequency : options.lfoRate,
+      min       : 0,
+      max       : options.filter.frequency,
+      type      : 'triangle'
+    }).start();
+    this.lfo.connect(this.lfoNoiseSig);
 
-    this._readOnly(['oscillator1', 'oscillator2', 'oscillator3', 'frequency1', 'frequency2', 'frequency3', 'envelope']);
+    this.portamento  = options.portamento;
+    //this.lfoNoise    = options.lfoNoise;
+    //this.eqOsc       = options.eqOsc;
+    //this.filterModOn = options.filterModOn;
+    //this.modMix      = options.modMix;
+
+    this._filterFreq  = options.filter.frequency;
+
+    this.filter.chain(this.envelope, this._reverb, this.output);
+
   }
 
- /**
-  * Connects or disconnects a component.
-  * @method connectComponent
-  * @param component {Tone.AudioNode} Component to connect or disconnect.
-  * @param connect {Boolean} True to connect, false to disconnect.
-  */
-  connectComponent (component, connect) {
-    if (connect) {
-      component.on = true;
-      component.disconnect();
-      if (this._filterOn) {
-        component.chain(this.filter, this.envelope, this.output);
+
+
+  /*set eqOsc (eqOsc) {
+    //console.log('eqOsc', eqOsc);
+    this._eqOsc = eqOsc;
+  }*/
+
+/*  set filterModOn (on) {
+    return;
+    //console.log('filterModOn', on);
+    this._filterModOn = on;
+    if (on) {
+      if (this._lfoNoise === 'lfo') {
+        this.lfoNoiseSig.connect(this.lfoNoiseFilter.frequency);
       }
-      else {
-        component.chain(this.envelope, this.output);
-      }
-      //component.chain(this.filter, this.envelope, this.output);
     }
     else {
-      component.on = false;
-      component.disconnect();
+      if (this._lfoNoise === 'lfo') {
+        this.lfoNoiseSig.disconnect();
+        this.lfoNoiseFilter.set('frequency', this._filterFreq);
+      }
     }
-  }
+  }*/
 
-  set filterOn (on) {
-    this._filterOn = on;
-    this.connectComponent(this.oscillator1, this.oscillator1.on);
-    this.connectComponent(this.oscillator2, this.oscillator2.on);
-    this.connectComponent(this.oscillator3, this.oscillator3.on);
-    this.connectComponent(this.noise, this.noise.on);
+  //set lfoNoise (lfoNoise) {
+    //console.log('lfoNoise', lfoNoise);
+  //  this._lfoNoise = lfoNoise;
+  //}
+
+ /**
+  * Sets frequency for LFO.
+  * @method lfoRate
+  * @param rate {Number}
+  */
+  //set lfoRate (rate) {
+  //  this.lfo.set('frequency', rate);
+  //}
+
+  /*set modMix (mix) {
+    //this.lfo.amplitude.value = mix;
+    //this.lfoNoiseVol.set('volume', -20 + 20*mix);
+      console.log('modMix', -20 + 20 * mix);
+  }*/
+
+ /**
+  * Setter for reverb.
+  * @method reverb
+  * @param reverb {Number}
+  */
+  set reverb (reverb) {
+    this._reverb.roomSize.value = reverb;
   }
 
  /**
@@ -387,73 +530,53 @@ class Moog extends Tone.Monophonic {
   * Sets filter properties.
   * @method setFilter
   * @param options {Object} With properties:
-  *   attack {Number}
-  *   decay {Number}
   *   frequency {Number}
-  *   modOn {Boolean}
   *   resonance {Number}
-  *   sustain {Number}
   */
-  setFilter (options) {
-    this.filter.setFrequency(options.frequency);
-    this.filter.setEnvelope(options);
-    this.filter.set('Q', options.resonance);
-  }
+  //setFilter (options) {
+    //this.filter.set('frequency', options.frequency);
+    //this.filter.frequency.value = options.frequency;
+    /*this._filterFreq = options.frequency;
+    this.lfoNoiseFilter.set('Q', options.resonance);
+    this.lfo.max = options.frequency;
+
+    if (!this._filterModOn) {
+      this.lfoNoiseFilter.set('frequency', options.frequency);
+    }
+
+  }*/
 
  /**
   * Sets rate on LFO for filter.
   * @method setLFORate
   * @param rate {Number}
   */
-  setLFORate (rate) {
-    this.filter.lfoRate = rate;
-  }
+  /*setLFORate (rate) {
+    this.lfoNoise.lfoRate = rate;
+  }*/
 
  /**
   * Sets LFO / noise filter selection.
   * @method setLFONoise
   * @param lfoNoise {String} "lfo" or "noise".
   */
-  setLFONoise (lfoNoise) {
-    this.filter.lfoNoise = lfoNoise;
-  }
+  /*setLFONoise (lfoNoise) {
+    this.lfoNoise.lfoNoise = lfoNoise;
+  }*/
 
  /**
-  * Sets oscillator properties.
-  * @method setOscillator
-  * @param oscillator {Tone.Oscillator}
-  * @param options {Object} With properties:
-  *   detune {Number} [optional]
-  *   on {Boolean}
-  *   type {String}
-  *   volume {Number}
+  * Sets the modulation mix. 0 is pure filter / osc and 1 is pure LFO / noise.
+  * @method setModMix
+  * @param mix {Number}
   */
-  setOscillator (oscillator, options) {
-    oscillator.type = options.type;
-    oscillator.volume.value = options.volume;
-    if ('detune' in options) {
-      oscillator.detune.value = options.detune;
-    }
-    if (options.on !== oscillator.on) {
-      this.connectComponent(oscillator, options.on);
-    }
-  }
+  /*setModMix (mix) {
 
- /**
-  * Sets noise properties.
-  * @method setNoise
-  * @param options {Object} With properties:
-  *   on {Boolean}
-  *   type {String}
-  *   volume {Number}
-  */
-  setNoise (options) {
-    this.noise.type = options.type;
-    this.noise.volume.value = options.volume;
-    if (options.on !== this.noise.on) {
-      this.connectComponent(this.noise, options.on);
+    function getVol (x) {
+      return -40 + x * 40;
     }
-  }
+    this.volLFONoise.set('volume', getVol(mix));
+    this.volEQOsc.set('volume', getVol(1 - mix));
+  }*/
 
  /**
   * Sets a note value.
@@ -466,20 +589,7 @@ class Moog extends Tone.Monophonic {
   */
   setNote (note1, note2, note3, time) {
     time = this.toSeconds(time);
-    if (this.portamento > 0) {
-      this.frequency1.setValueAtTime(this.frequency1.value, time);
-      this.frequency2.setValueAtTime(this.frequency2.value, time);
-      this.frequency3.setValueAtTime(this.frequency3.value, time);
-      const portTime = this.toSeconds(this.portamento);
-      this.frequency1.exponentialRampToValueAtTime(note1, time + portTime);
-      this.frequency2.exponentialRampToValueAtTime(note2, time + portTime);
-      this.frequency3.exponentialRampToValueAtTime(note3, time + portTime);
-    }
-    else {
-      this.frequency1.setValueAtTime(note1, time);
-      this.frequency2.setValueAtTime(note2, time);
-      this.frequency3.setValueAtTime(note3, time);
-    }
+    this.source.setNotes(note1, note2, note3, time, this.portamento);
     return this;
   }
 
@@ -508,12 +618,9 @@ class Moog extends Tone.Monophonic {
   * @return {Moog}
   */
   _triggerEnvelopeAttack (time, velocity) {
+    this.filter.triggerAttack(time);
     this.envelope.triggerAttack(time, velocity);
-    this.noise.start(time);
-    this.oscillator1.start(time);
-    this.oscillator2.start(time);
-    this.oscillator3.start(time);
-    this.filter.start(time, velocity);
+    this.source.start(time);
     return this;
   }
 
@@ -525,12 +632,9 @@ class Moog extends Tone.Monophonic {
   */
   _triggerEnvelopeRelease (time) {
     time = this.toSeconds(time);
+    this.filter.triggerRelease(time);
     this.envelope.triggerRelease(time);
-    this.noise.stop(time + this.envelope.release);
-    this.oscillator1.stop(time + this.envelope.release);
-    this.oscillator2.stop(time + this.envelope.release);
-    this.oscillator3.stop(time + this.envelope.release);
-    this.filter.stop(time + this.envelope.release);
+    this.source.stop(time + this.envelope.release);
     return this;
   }
 
@@ -557,9 +661,10 @@ Moog.defaults = {
     decay     : 0.1,
     sustain   : 0.5
   },
-  filterOn : true,
+  filterModOn : true,
   lfoNoise : 'lfo',
   lfoRate  : 10,
+  modMix   : 0.5,
   noise: {
     on     : false,
     type   : 'pink',
@@ -585,7 +690,8 @@ Moog.defaults = {
     type    : 'triangle',
     volume  : 0.5
   },
-  portamento: 0
+  portamento : 0,
+  reverb     : 0
 };
 
 
@@ -608,7 +714,7 @@ export default class Piano extends React.Component {
     this.state = {
       active: []
     };
-    this.data = getData(OCTAVES, props.oscillator1.range, props.oscillator2.range, props.oscillator3.range);
+    this.data  = getData(OCTAVES, props.oscillator1.range, props.oscillator2.range, props.oscillator3.range);
     this.synth = this.getSynth(
       props.oscillator1,
       props.oscillator2,
@@ -620,7 +726,6 @@ export default class Piano extends React.Component {
     );
     this.mouseDown        = false;
     this.handleMouseUpDoc = this.handleMouseUpDoc.bind(this);
-
   }
 
  /**
@@ -635,37 +740,71 @@ export default class Piano extends React.Component {
     const nextOsc1 = nextProps.oscillator1;
     const nextOsc2 = nextProps.oscillator2;
     const nextOsc3 = nextProps.oscillator3;
+    const controls = props.controls;
+    const nextControls = nextProps.controls;
 
+    // Oscillators.
     if (
       props.oscillator1 !== nextOsc1 ||
       props.oscillator2 !== nextOsc2 ||
       props.oscillator3 !== nextOsc3
     ) {
       this.data = getData(OCTAVES, nextOsc1.range, nextOsc2.range, nextOsc3.range);
-      synth.setOscillator(synth.oscillator1, nextOsc1);
-      synth.setOscillator(synth.oscillator2, nextOsc2);
-      synth.setOscillator(synth.oscillator3, nextOsc3);
-
+      synth.source.setComponent(synth.source.osc1, nextOsc1);
+      synth.source.setComponent(synth.source.osc2, nextOsc2);
+      synth.source.setComponent(synth.source.osc3, nextOsc3);
     }
 
+    // Noise source.
     if (props.noise !== nextProps.noise) {
-      synth.setNoise(nextProps.noise);
+      synth.source.setComponent(synth.source.noise, nextProps.noise);
     }
 
+    // Amplitude envelope.
     if (props.envelope !== nextProps.envelope) {
       synth.setEnvelope(nextProps.envelope);
     }
 
+    // Filter and filter envelop properties.
     if (props.filter !== nextProps.filter) {
-      synth.setFilter(nextProps.filter);
+      synth.filter.setFilter(nextProps.filter);
     }
 
-    if (props.controls !== nextProps.controls) {
-      synth.filterOn = nextProps.controls.filterOn;
-      synth.portamento = nextProps.controls.glide;
-      synth.setLFORate(nextProps.controls.lfoRate);
-      synth.setLFONoise(nextProps.controls.lfoNoise);
+    // Filter-oscillator selection.
+    if (controls.eqOsc !== nextControls.eqOsc) {
+      synth.filter.eqOsc = nextControls.eqOsc;
     }
+
+    // LFO rate.
+    if (controls.lfoRate !== nextControls.lfoRate) {
+      synth.filter.lfoRate = nextControls.lfoRate;
+    }
+
+    // LFO-noise selection.
+    if (controls.lfoNoise !== nextControls.lfoNoise) {
+      synth.filter.lfoNoise = nextControls.lfoNoise;
+    }
+
+    // Filter-oscillator/LFO-noise modulation mix.
+    if (controls.modMix !== nextControls.modMix) {
+      synth.filter.mix = nextControls.modMix;
+    }
+
+    // Filter modulation on or off.
+    if (controls.filterModOn !== nextControls.filterModOn) {
+      synth.filter.modulate = nextControls.filterModOn;
+    }
+
+    // Glide.
+    if (controls.glide !== nextControls.glide) {
+      synth.portamento = nextControls.glide;
+    }
+
+    // Reverb.
+    if (controls.reverb !== nextControls.reverb) {
+      synth.reverb = nextControls.reverb;
+    }
+
   }
 
  /**
@@ -695,9 +834,12 @@ export default class Piano extends React.Component {
   *   rolloff {Number}
   *   type {String}
   * @param controls {Object} With properties:
+  *   eqOsc {String} "eq" or "osc".
+  *   filterModOn {Boolean}
   *   glide {Number}
   *   lfoNoise {String} "lfo" or "noise".
   *   lfoRate {Number}
+  *   reverb {Number}
   * @return {Moog}
   */
   getSynth (osc1, osc2, osc3, noise, envelope, filter, controls) {
@@ -708,7 +850,8 @@ export default class Piano extends React.Component {
     }
 
     const synth = new Moog({
-      filterOn    : controls.filterOn,
+      eqOsc       : controls.eqOsc,
+      filterModOn : controls.filterModOn,
       lfoNoise    : controls.lfoNoise,
       lfoRate     : controls.lfoRate,
       noise       : noise,
@@ -730,36 +873,22 @@ export default class Piano extends React.Component {
         sustain    : filter.sustain,
         type       : filter.type
       },
-      portamento : controls.glide
+      portamento : controls.glide,
+      reverb     : controls.reverb
     });
-    const reverb = 0.5;
-    const rev = new Tone.JCReverb(reverb);
-    //return synth.toMaster();
-    return synth.chain(rev, Tone.Master);
-    /*const synth = new Tone.PolySynth(12, Tone.Synth, {
-      oscillator: {
-        type: type
-      },
-      envelope: {
-        attack  : attack,
-        decay   : decay,
-        sustain : sustain,
-        release : decay
-      }
-    });
-
-    const rev = new Tone.JCReverb(reverb);
-    return synth.chain(rev, Tone.Master);*/
+    return synth.toMaster();
   }
 
  /**
   * Starts playing a note.
   * @method startNote
-  * @param note {String}
+  * @param note1 {String} First oscillator.
+  * @param note2 {String} Second oscillator.
+  * @param note3 {String} Third oscillator.
+  * @param freq3 {Number} Third oscillator.
   */
-  startNote (note1, note2, note3, freq1, freq2, freq3) {
-    this.synth.triggerAttack(note1, note2, note3);
-    //this.synth.triggerAttack(freq1, freq2, freq3);
+  startNote (note1, note2, note3, freq3) {
+    this.synth.triggerAttack(note1, note2, note3, freq3);
     let active = this.state.active.map(d => d);
     active.push(note1);
     this.setState({
@@ -772,7 +901,6 @@ export default class Piano extends React.Component {
   * @method endAllNotes
   */
   endAllNotes () {
-    //this.synth.releaseAll();
     this.synth.triggerRelease();
     this.setState({
       active: []
@@ -782,9 +910,12 @@ export default class Piano extends React.Component {
  /**
   * Stops playing a note.
   * @method endNote
-  * @param note {String}
+  * @param note1 {String} First oscillator.
+  * @param note2 {String} Second oscillator.
+  * @param note3 {String} Third oscillator.
+  * @param freq3 {Number} Third oscillator.
   */
-  endNote (note1, note2, note3) {
+  endNote (note1, note2, note3, freq3) {
     this.synth.triggerRelease(/*note*/);
     let active = this.state.active;
     active.splice(active.indexOf(note1), 1);
@@ -796,30 +927,39 @@ export default class Piano extends React.Component {
  /**
   * Handler for mousedown events on keys.
   * @method handleMouseDown
-  * @param note {String}
+  * @param note1 {String} First oscillator.
+  * @param note2 {String} Second oscillator.
+  * @param note3 {String} Third oscillator.
+  * @param freq3 {Number} Third oscillator.
   */
-  handleMouseDown (note1, note2, note3, freq1, freq2, freq3) {
+  handleMouseDown (note1, note2, note3, freq3) {
     this.mouseDown = true;
     window.addEventListener('mouseup', this.handleMouseUpDoc, false);
-    this.startNote(note1, note2, note3, freq1, freq2, freq3);
+    this.startNote(note1, note2, note3, freq3);
   }
 
  /**
   * Handler for mouseenter events on keys.
   * @method handleMouseEnter
-  * @param note {String}
+  * @param note1 {String} First oscillator.
+  * @param note2 {String} Second oscillator.
+  * @param note3 {String} Third oscillator.
+  * @param freq3 {Number} Third oscillator.
   */
-  handleMouseEnter (note1, note2, note3, freq1, freq2, freq3) {
+  handleMouseEnter (note1, note2, note3, freq3) {
     if (!this.mouseDown) return;
-    this.startNote(note1, note2, note3, freq1, freq2, freq3);
+    this.startNote(note1, note2, note3, freq3);
   }
 
  /**
   * Handler for mouseleave events on keys.
   * @method handleMouseLeave
-  * @param note {String}
+  * @param note1 {String} First oscillator.
+  * @param note2 {String} Second oscillator.
+  * @param note3 {String} Third oscillator.
+  * @param freq3 {Number} Third oscillator.
   */
-  handleMouseLeave (note1, note2, note3) {
+  handleMouseLeave (note1, note2, note3, freq3) {
     if (!this.mouseDown) return;
     this.endNote(note1, note2, note3);
   }
@@ -861,9 +1001,9 @@ export default class Piano extends React.Component {
                 key={i}
                 height={0.8 * props.height - 2}
                 left={(d.index + 1) * keyWidth - sharpWidth / 2}
-                onMouseDown={this.handleMouseDown.bind(this, d.note1, d.note2, d.note3, d.freq1, d.freq2, d.freq3)}
-                onMouseEnter={this.handleMouseEnter.bind(this, d.note1, d.note2, d.note3, d.freq1, d.freq2, d.freq3)}
-                onMouseLeave={this.handleMouseLeave.bind(this, d.note1, d.note2, d.note3, d.freq1, d.freq2, d.freq3)}
+                onMouseDown={this.handleMouseDown.bind(this, d.note1, d.note2, d.note3, d.freq3)}
+                onMouseEnter={this.handleMouseEnter.bind(this, d.note1, d.note2, d.note3, d.freq3)}
+                onMouseLeave={this.handleMouseLeave.bind(this, d.note1, d.note2, d.note3, d.freq3)}
                 width={sharpWidth}
               />
               :
@@ -872,9 +1012,9 @@ export default class Piano extends React.Component {
                 key={i}
                 height={props.height - 2}
                 left={d.index * keyWidth}
-                onMouseDown={this.handleMouseDown.bind(this, d.note1, d.note2, d.note3, d.freq1, d.freq2, d.freq3)}
-                onMouseEnter={this.handleMouseEnter.bind(this, d.note1, d.note2, d.note3, d.freq1, d.freq2, d.freq3)}
-                onMouseLeave={this.handleMouseLeave.bind(this, d.note1, d.note2, d.note3, d.freq1, d.freq2, d.freq3)}
+                onMouseDown={this.handleMouseDown.bind(this, d.note1, d.note2, d.note3, d.freq3)}
+                onMouseEnter={this.handleMouseEnter.bind(this, d.note1, d.note2, d.note3, d.freq3)}
+                onMouseLeave={this.handleMouseLeave.bind(this, d.note1, d.note2, d.note3, d.freq3)}
                 width={keyWidth}
               />
           )
