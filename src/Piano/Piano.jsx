@@ -354,7 +354,7 @@ class Filter extends Tone.AudioNode {
 
     this._filterFreq = options.frequency;
 
-    this.eqOscFilter.set('Q', options.resonance);
+    this.envFilter.set('Q', options.resonance);
     this.lfoFilter.set('Q', options.resonance);
 
     this.lfo.max = options.frequency;
