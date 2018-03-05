@@ -134,6 +134,8 @@ body, html {
     margin-top: 12px; }
   #ctrl-out .reverb {
     margin-top: 39px; }
+  #ctrl-out .volume {
+    margin-top: 46px; }
   #ctrl-out .ctrl-row-label-lg {
     position: relative;
     top: 130px; }

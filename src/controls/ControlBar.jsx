@@ -491,10 +491,10 @@ export default class ControlBar extends React.Component {
               domain={[1, 5]}
               label="Contour"
               labels={[0, 2, 4, 6, 8, 10]}
-              onChange={this.handleChange.bind(this, 'filter', 'contour')}
+              onChange={this.handleChange.bind(this, 'filterEnv', 'contour')}
               size={knobSize}
               ticks={11}
-              value={props.filter.contour}
+              value={props.filterEnv.contour}
             />
           </div>
           <div className="ctrl-row filter-2">
@@ -503,30 +503,30 @@ export default class ControlBar extends React.Component {
               domain={[0, 15]}
               label="Attack Time"
               labels={['msec', 10, 200, 600, 1, 5, 10, 'sec']}
-              onChange={this.handleChange.bind(this, 'filter', 'attack')}
+              onChange={this.handleChange.bind(this, 'filterEnv', 'attack')}
               size={knobSize}
               ticks={15}
-              value={attackToCtrlVal(props.filter.attack)}
+              value={attackToCtrlVal(props.filterEnv.attack)}
             />
             <Pot
               angle={270}
               domain={[0, 15]}
               label="Decay Time"
               labels={['msec', 10, 200, 600, 1, 5, 10, 'sec']}
-              onChange={this.handleChange.bind(this, 'filter', 'decay')}
+              onChange={this.handleChange.bind(this, 'filterEnv', 'decay')}
               size={knobSize}
               ticks={15}
-              value={attackToCtrlVal(props.filter.decay)}
+              value={attackToCtrlVal(props.filterEnv.decay)}
             />
             <Pot
               angle={270}
               domain={[0, 1]}
               label="Sustain"
               labels={[0, 2, 4, 6, 8, 10]}
-              onChange={this.handleChange.bind(this, 'filter', 'sustain')}
+              onChange={this.handleChange.bind(this, 'filterEnv', 'sustain')}
               size={knobSize}
               ticks={11}
-              value={props.filter.sustain}
+              value={props.filterEnv.sustain}
             />
           </div>
           <div className="ctrl-row-label mt-25">Loudness Control</div>
@@ -589,6 +589,18 @@ export default class ControlBar extends React.Component {
               size={knobSize}
               ticks={11}
               value={props.controls.reverb}
+            />
+          </div>
+          <div className="ctrl-row volume">
+            <Pot
+              angle={270}
+              domain={[0, 10]}
+              label="Volume"
+              labels={[0, 2, 4, 6, 8, 10]}
+              onChange={this.handleChange.bind(this, 'controls', 'volume')}
+              size={knobSize}
+              ticks={11}
+              value={dbToVol(props.controls.volume)}
             />
           </div>
           <div className="ctrl-row-label-lg">Output</div>
