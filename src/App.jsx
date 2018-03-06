@@ -24,13 +24,13 @@ export default class App extends React.Component {
     this.state = {
       controls: {
         eqOsc       : 'eq',
-        filterModOn : true,
+        filterModOn : false,
         glide       : 0,
         lfoNoise    : 'lfo',
         lfoRate     : 10,
         modMix      : 0.5,
         reverb      : 0.5,
-        volume      : 0
+        volume      : -10
       },
       envelope: {
         attack  : 0.005,
@@ -56,7 +56,7 @@ export default class App extends React.Component {
       },
       oscillator1 : {
         on     : true,
-        range  : 2,
+        range  : 3,
         type   : 'triangle',
         volume : 0
       },
@@ -70,7 +70,7 @@ export default class App extends React.Component {
       oscillator3 : {
         detune : 0,
         on     : true,
-        range  : 1,
+        range  : 3,
         type   : 'sawtooth',
         volume : 0
       }
