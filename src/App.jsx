@@ -64,7 +64,7 @@ export default class App extends React.Component {
         detune : 0,
         on     : true,
         range  : 3,
-        type   : 'sawtooth',
+        type   : 'fatsawtooth',
         volume : 0
       },
       oscillator3 : {

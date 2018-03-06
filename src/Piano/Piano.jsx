@@ -112,9 +112,9 @@ class Oscillators extends Tone.AudioNode {
 
     this.createInsOuts(1, 1);
 
-    this.osc1  = new Tone.Oscillator(options.oscillator1);
-    this.osc2  = new Tone.Oscillator(options.oscillator2);
-    this.osc3  = new Tone.Oscillator(options.oscillator3);
+    this.osc1  = new Tone.OmniOscillator(options.oscillator1);
+    this.osc2  = new Tone.OmniOscillator(options.oscillator2);
+    this.osc3  = new Tone.OmniOscillator(options.oscillator3);
     this.noise = new Tone.Noise(options.noise);
 
     this.freq1 = this.osc1.frequency;

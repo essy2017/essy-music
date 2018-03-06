@@ -30,36 +30,20 @@ const RANGE_MAP = {
   '2'  : 6
 };
 
-const DETUNE_MAP = [
-  -1100,  // -7
-  -900,   // -6
-  -700,   // -5
-  -500,   // -4
-  -400,   // -3
-  -300,   // -m3
-  -200,   // -2
-  -100,   // -m2
-  0,      // none
-  100,    // m2
-  200,    // 2
-  300,    // m3
-  400,    // 3
-  500,    // 4
-  700,    // 5
-  900,    // 6
-  1100    // 7
-];
-
 /**
  * Map from control to actual values for oscillator types.
  * @property TYPE_MAP
  * @type Object
  */
 const TYPE_MAP = {
-  'saw' : 'sawtooth',
-  'sin' : 'sine',
-  'sqr' : 'square',
-  'tri' : 'triangle'
+  'saw'  : 'sawtooth',
+  'sin'  : 'sine',
+  'sqr'  : 'square',
+  'tri'  : 'triangle',
+  'fsaw' : 'fatsawtooth',
+  'fsin' : 'fatsine',
+  'fsqr' : 'fatsquare',
+  'ftri' : 'fattriangle'
 };
 
 /**
@@ -246,7 +230,7 @@ export default class ControlBar extends React.Component {
               onChange={this.handleChange.bind(this, 'oscillator1', 'type')}
               size={knobSize}
               snap={true}
-              ticks={4}
+              ticks={8}
               value={typeValue(props.oscillator1.type)}
             />
           </div>
@@ -280,7 +264,7 @@ export default class ControlBar extends React.Component {
               onChange={this.handleChange.bind(this, 'oscillator2', 'type')}
               size={knobSize}
               snap={true}
-              ticks={4}
+              ticks={8}
               value={typeValue(props.oscillator2.type)}
             />
           </div>
@@ -314,7 +298,7 @@ export default class ControlBar extends React.Component {
               onChange={this.handleChange.bind(this, 'oscillator3', 'type')}
               size={knobSize}
               snap={true}
-              ticks={4}
+              ticks={8}
               value={typeValue(props.oscillator3.type)}
             />
           </div>
