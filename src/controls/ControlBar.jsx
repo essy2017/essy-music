@@ -30,6 +30,26 @@ const RANGE_MAP = {
   '2'  : 6
 };
 
+const DETUNE_MAP = [
+  -1100,  // -7
+  -900,   // -6
+  -700,   // -5
+  -500,   // -4
+  -400,   // -3
+  -300,   // -m3
+  -200,   // -2
+  -100,   // -m2
+  0,      // none
+  100,    // m2
+  200,    // 2
+  300,    // m3
+  400,    // 3
+  500,    // 4
+  700,    // 5
+  900,    // 6
+  1100    // 7
+];
+
 /**
  * Map from control to actual values for oscillator types.
  * @property TYPE_MAP
@@ -244,12 +264,12 @@ export default class ControlBar extends React.Component {
             />
             <Pot
               angle={270}
-              domain={[-1000, 1000]}
-              labels={[-7, -5, -3, -1, 1, 3, 5, 7]}
+              domain={[-1100, 1100]}
+              labels={['-7', '-6', '-5', '-4', '-3', '-2', '0', '2', '3', '4', '5', '6', '7']}
               onChange={this.handleChange.bind(this, 'oscillator2', 'detune')}
               size={knobSize}
               snap={true}
-              ticks={15}
+              ticks={25}
               value={props.oscillator2.detune}
             />
             <Pot
@@ -278,12 +298,12 @@ export default class ControlBar extends React.Component {
             />
             <Pot
               angle={270}
-              domain={[-1000, 1000]}
-              labels={[-7, -5, -3, -1, 1, 3, 5, 7]}
+              domain={[-1100, 1100]}
+              labels={['-7', '-6', '-5', '-4', '-3', '-2', '0', '2', '3', '4', '5', '6', '7']}
               onChange={this.handleChange.bind(this, 'oscillator3', 'detune')}
               size={knobSize}
               snap={true}
-              ticks={15}
+              ticks={25}
               value={props.oscillator3.detune}
             />
             <Pot

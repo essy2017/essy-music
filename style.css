@@ -25,6 +25,7 @@ body, html {
 .ctrl-panel {
   display: inline-block;
   height: 100%;
+  position: relative;
   vertical-align: top; }
   .ctrl-panel:not(:first-child) {
     border-left: 1px solid #333; }
@@ -38,9 +39,6 @@ body, html {
 #ctrl-mixer {
   padding: 22px 10px 0 10px;
   width: 27%; }
-  #ctrl-mixer .ctrl-row-label-lg {
-    position: relative;
-    top: 126px; }
   #ctrl-mixer .vol-1 .switch-wrap {
     position: relative;
     top: 32px; }
@@ -106,9 +104,6 @@ body, html {
     top: 40px; }
     #ctrl-cont .lfo-rate .pot {
       margin: auto; }
-  #ctrl-cont .ctrl-row-label-lg {
-    position: relative;
-    top: 168px; }
 
 #ctrl-mod {
   padding: 10px 0 0 30px;
@@ -125,8 +120,7 @@ body, html {
   #ctrl-mod .filter-2 {
     margin-top: 40px; }
   #ctrl-mod .ctrl-row-label-lg {
-    position: relative;
-    top: 40px; }
+    padding-left: 28px; }
 
 #ctrl-out {
   padding: 10px 10px 0 15px; }
@@ -136,9 +130,6 @@ body, html {
     margin-top: 39px; }
   #ctrl-out .volume {
     margin-top: 46px; }
-  #ctrl-out .ctrl-row-label-lg {
-    position: relative;
-    top: 41px; }
 
 .mt-15 {
   margin-top: 1.5rem; }
@@ -160,8 +151,13 @@ body, html {
   font-size: 0.5rem; }
 
 .ctrl-row-label-lg {
+  bottom: 0;
   font-size: 1rem;
-  font-weight: 300; }
+  font-weight: 300;
+  left: 0;
+  padding-bottom: 3px;
+  position: absolute;
+  right: 0; }
 
 .ctrl-row {
   display: flex;
@@ -175,7 +171,7 @@ body, html {
     display: inline-block;
     height: 1px;
     position: relative;
-    top: -16px;
+    top: -7px;
     width: 20px; }
   .switch-wrap .switch {
     display: inline-block; }
@@ -216,8 +212,10 @@ body, html {
     background: linear-gradient(to left, #9fc9d1 70%, #c1dce2); }
   .switch .label {
     color: #777;
+    float: left;
     font-size: 0.5rem;
-    text-transform: uppercase; }
+    text-transform: uppercase;
+    width: 50%; }
     .switch .label.label-on {
       text-align: right;
       width: 100%; }
@@ -225,7 +223,6 @@ body, html {
     color: #a8d8f8;
     text-shadow: 0px 0px 1px #d7edfc; }
   .switch .labels .label:not(.label-on) {
-    display: inline-block;
     margin-top: 0.2rem;
     text-align: center; }
     .switch .labels .label:not(.label-on).label-left {
@@ -239,8 +236,10 @@ body, html {
       -ms-transform: translateX(30%);
       transform: translateX(30%); }
   .switch.vertical .label {
+    float: none;
     margin: 0;
-    text-align: center; }
+    text-align: center;
+    width: 100%; }
     .switch.vertical .label.label-top {
       color: #a8d8f8;
       text-shadow: 0px 0px 1px #d7edfc; }
